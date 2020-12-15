@@ -5,13 +5,11 @@ import { join } from "path";
 import { format } from "util";
 
 /**
- * Subcommands:
+ * @TODO Subcommands:
  *
- *    init
  *    raise       Publishes a new version of the demo site
  *    obliterate  Remove all instances of the demo site
- *    list        List all versions of the current site
- *    browse      Retrieves the link to the
+ *    browse      Retrieves the link (?)
  */
 
 async function main() {
@@ -25,7 +23,6 @@ async function main() {
     commandFiles.map(async (file) => {
       const path = join(commandsDir, file);
       const { default: command } = await import(path);
-      // console.log(command);
       program.addCommand(command());
     }),
   );
