@@ -1,3 +1,5 @@
+#!/usr/bin/env ts-node-script
+
 import chalk from "chalk";
 import { program } from "commander";
 import { readdirSync } from "fs";
