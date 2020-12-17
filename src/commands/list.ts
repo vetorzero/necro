@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { listDeployments } from "../utils/s3";
+import { listDeployments, Deployment } from "../utils/s3";
 
 export default function list() {
   return new Command("list").description("List all versions of the current site.").action(action);

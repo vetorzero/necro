@@ -1,29 +1,65 @@
 import AWS from "aws-sdk";
 import { basename } from "path";
+import { isNull, reject, sortBy, prop } from "lodash/fp";
+import { DeveloperName } from "aws-sdk/clients/alexaforbusiness";
+
+const BUCKET = "demo.vzlab.com.br";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
-const baseRequest: AWS.S3.ListObjectsRequest = {
-  Bucket: "demo.vzlab.com.br",
-  Delimiter: "/",
+
+export type Deployment = {
+  prefix: string;
+  name: string;
+  lastModified: Date;
 };
 
 /**
  * List all deployments for a given client and project
+ * @todo sort by lastModified
  */
 export async function listDeployments(client: string, project: string): Promise<Deployment[]> {
-  const deployments = await s3
+  const result = await s3
     .listObjects({
-      ...baseRequest,
+      Bucket: BUCKET,
+      Delimiter: "/",
+      MaxKeys: 1_000_000,
       Prefix: `${client}/${project}/`,
     })
     .promise();
 
-  const prefixes = (deployments.CommonPrefixes ?? [])
-    // filter out empty results
-    .filter((x) => x.Prefix?.length)
-    // get the folder (deployment) name
-    .map((x): Deployment => ({ prefix: x.Prefix! }));
+  const paths = result.CommonPrefixes;
+  if (!paths) {
+    throw new Error(`Could't find deployments for client ${client}, project ${project}`);
+  }
 
-  return prefixes;
+  const filter = reject<Deployment>(isNull);
+  const sort = sortBy<Deployment>(prop("lastModified"));
+
+  const deployments = await Promise.all(paths.map(getDeploymentInformation));
+
+  return sort(filter(deployments));
+}
+
+async function getDeploymentInformation(result: AWS.S3.CommonPrefix): Promise<Deployment | null> {
+  if (!result.Prefix) return null;
+
+  const prefix = result.Prefix;
+
+  return {
+    prefix,
+    name: basename(prefix),
+    lastModified: await getDeploymentLastModified(prefix),
+  };
+}
+
+async function getDeploymentLastModified(prefix: string): Promise<Date> {
+  const result = await s3
+    .getObject({
+      Bucket: BUCKET,
+      Key: `${prefix}index.html`,
+    })
+    .promise();
+
+  return result.LastModified!;
 }
