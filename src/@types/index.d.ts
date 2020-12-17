@@ -1,0 +1,3 @@
+type Deployment = {
+  prefix: string;
+};
