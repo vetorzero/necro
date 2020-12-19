@@ -2,6 +2,7 @@ import AWS from "aws-sdk";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename, join } from "path";
 import { assertFileExists, assertIsDir, assertNotEmpty } from "./file";
+import { error } from "./log";
 
 const BUCKET = "demo.vzlab.com.br";
 
@@ -63,26 +64,6 @@ export async function listDeployments(client: string, project: string): Promise<
   return sort(filter(deployments));
 }
 
-/**
- * Cases:
- *  path doesn't exist
- *  path isn't a dir
- *  folder is empty
- */
-export async function deploy(client: string, project: string, sourceFolder: string) {
-  const path = join(process.cwd(), sourceFolder);
-
-  assertFileExists(
-    path,
-    `Source folder "${path}" doesn't exist.
-You should provide a valid path relative to the necro.json config file.`,
-  );
-  assertIsDir(
-    path,
-    `Source folder "${path}" is… well… not a folder.
-You should provide a valid path relative to the necro.json config file.`,
-  );
-  assertNotEmpty(path, `Source folder "${path}" is empty.`);
-
-  // return x.isDirectory();
-}
+// export async function upload(client: string, project: string, sourceFolder: string) {
+//   const path = join(process.cwd(), sourceFolder);
+// }

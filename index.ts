@@ -17,7 +17,6 @@ Error.stackTraceLimit = Infinity;
 
 async function main() {
   program.storeOptionsAsProperties(false);
-  program.version("0.0.0");
 
   program.option("--debug", "Show extended debug information.", false);
 
@@ -38,9 +37,9 @@ async function main() {
 main().catch((err) => {
   const { debug } = program.opts();
 
-  error("Oops. Something went wrong:\n\n%s\n", err instanceof Error ? err.message : err);
-
-  if (debug && err instanceof Error) {
-    error(err);
+  if (debug) {
+    error("\n\n", err);
+  } else {
+    error("\nRun the command again with --debug to see more details.");
   }
 });

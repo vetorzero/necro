@@ -47,28 +47,28 @@ export function getProjectBaseDirectory(): string | null {
 /**
  * Asserts that path is a valid file/dir/link.
  */
-export function assertFileExists(path: string, message: string): void {
+export function assertFileExists(path: string): void {
   if (!existsSync(path)) {
-    throw new Error(message);
+    throw new Error(`Path ${path} doesn't exist.`);
   }
 }
 
 /**
  * Asserts that path is a valid dir.
  */
-export function assertIsDir(path: string, message: string): void {
+export function assertIsDir(path: string): void {
   const stat = lstatSync(path);
   if (!stat.isDirectory()) {
-    throw new Error(message);
+    throw new Error(`Path ${path} is not a dir.`);
   }
 }
 
 /**
  * Asserts that a folder is not empty
  */
-export function assertNotEmpty(path: string, message: string): void {
+export function assertNotEmpty(path: string): void {
   const ls = readdirSync(path);
   if (!ls.length) {
-    throw new Error(message);
+    throw new Error(`Dir ${path} is empty.`);
   }
 }
