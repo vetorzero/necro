@@ -1,7 +1,7 @@
 import AWS from "aws-sdk";
-import { basename } from "path";
-import { isNull, reject, sortBy, prop } from "lodash/fp";
-import { DeveloperName } from "aws-sdk/clients/alexaforbusiness";
+import { isNull, prop, reject, sortBy } from "lodash/fp";
+import { basename, join } from "path";
+import { assertFileExists, assertIsDir, assertNotEmpty } from "./file";
 
 const BUCKET = "demo.vzlab.com.br";
 
@@ -14,6 +14,28 @@ export type Deployment = {
   lastModified: Date;
 };
 
+async function getDeploymentInformation(result: AWS.S3.CommonPrefix): Promise<Deployment | null> {
+  if (!result.Prefix) return null;
+
+  const prefix = result.Prefix;
+
+  return {
+    prefix,
+    name: basename(prefix),
+    lastModified: await getDeploymentLastModified(prefix),
+  };
+}
+
+async function getDeploymentLastModified(prefix: string): Promise<Date> {
+  const result = await s3
+    .getObject({
+      Bucket: BUCKET,
+      Key: `${prefix}index.html`,
+    })
+    .promise();
+
+  return result.LastModified!;
+}
 /**
  * List all deployments for a given client and project
  * @todo sort by lastModified
@@ -41,25 +63,26 @@ export async function listDeployments(client: string, project: string): Promise<
   return sort(filter(deployments));
 }
 
-async function getDeploymentInformation(result: AWS.S3.CommonPrefix): Promise<Deployment | null> {
-  if (!result.Prefix) return null;
+/**
+ * Cases:
+ *  path doesn't exist
+ *  path isn't a dir
+ *  folder is empty
+ */
+export async function deploy(client: string, project: string, sourceFolder: string) {
+  const path = join(process.cwd(), sourceFolder);
 
-  const prefix = result.Prefix;
+  assertFileExists(
+    path,
+    `Source folder "${path}" doesn't exist.
+You should provide a valid path relative to the necro.json config file.`,
+  );
+  assertIsDir(
+    path,
+    `Source folder "${path}" is… well… not a folder.
+You should provide a valid path relative to the necro.json config file.`,
+  );
+  assertNotEmpty(path, `Source folder "${path}" is empty.`);
 
-  return {
-    prefix,
-    name: basename(prefix),
-    lastModified: await getDeploymentLastModified(prefix),
-  };
-}
-
-async function getDeploymentLastModified(prefix: string): Promise<Date> {
-  const result = await s3
-    .getObject({
-      Bucket: BUCKET,
-      Key: `${prefix}index.html`,
-    })
-    .promise();
-
-  return result.LastModified!;
+  // return x.isDirectory();
 }

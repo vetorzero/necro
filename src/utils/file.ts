@@ -1,5 +1,7 @@
 import path, { basename, join } from "path";
-import { existsSync, PathLike } from "fs";
+import { existsSync, lstatSync, PathLike, readdirSync } from "fs";
+import { assert } from "console";
+import { AssertionError } from "assert";
 
 export const CONFIG_FILE = "necro.json";
 
@@ -40,4 +42,33 @@ export function getProjectBaseDirectory(): string | null {
   }
 
   return null;
+}
+
+/**
+ * Asserts that path is a valid file/dir/link.
+ */
+export function assertFileExists(path: string, message: string): void {
+  if (!existsSync(path)) {
+    throw new Error(message);
+  }
+}
+
+/**
+ * Asserts that path is a valid dir.
+ */
+export function assertIsDir(path: string, message: string): void {
+  const stat = lstatSync(path);
+  if (!stat.isDirectory()) {
+    throw new Error(message);
+  }
+}
+
+/**
+ * Asserts that a folder is not empty
+ */
+export function assertNotEmpty(path: string, message: string): void {
+  const ls = readdirSync(path);
+  if (!ls.length) {
+    throw new Error(message);
+  }
 }

@@ -1,10 +1,11 @@
 #!/usr/bin/env ts-node-script
 
-import chalk from "chalk";
 import { program } from "commander";
 import { readdirSync } from "fs";
 import { join } from "path";
-import { format } from "util";
+import { error } from "./src/utils/log";
+
+Error.stackTraceLimit = Infinity;
 
 /**
  * @TODO Subcommands:
@@ -18,6 +19,8 @@ async function main() {
   program.storeOptionsAsProperties(false);
   program.version("0.0.0");
 
+  program.option("--debug", "Show extended debug information.", false);
+
   // load commands
   const commandsDir = join(__dirname, "src/commands");
   const commandFiles = readdirSync(commandsDir);
@@ -29,9 +32,15 @@ async function main() {
     }),
   );
 
-  program.parse(process.argv);
+  await program.parseAsync(process.argv);
 }
 
 main().catch((err) => {
-  console.error(chalk.red(format("Oops. Something went wrong...\n\n", err)));
+  const { debug } = program.opts();
+
+  error("Oops. Something went wrong:\n\n%s\n", err instanceof Error ? err.message : err);
+
+  if (debug && err instanceof Error) {
+    error(err);
+  }
 });
