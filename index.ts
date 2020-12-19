@@ -40,6 +40,6 @@ main().catch((err) => {
   if (debug) {
     error("\n\n", err);
   } else {
-    error("\nRun the command again with --debug to see more details.");
+    error("\nRun your command again with --debug to see more details.");
   }
 });
