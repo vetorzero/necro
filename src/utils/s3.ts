@@ -1,8 +1,7 @@
 import AWS from "aws-sdk";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
-import { basename, join } from "path";
-import { assertFileExists, assertIsDir, assertNotEmpty } from "./file";
-import { error } from "./log";
+import { basename } from "path";
+import { assertIsDir, listDir } from "./file";
 
 const BUCKET = "demo.vzlab.com.br";
 
@@ -15,7 +14,9 @@ export type Deployment = {
   lastModified: Date;
 };
 
-async function getDeploymentInformation(result: AWS.S3.CommonPrefix): Promise<Deployment | null> {
+async function getDeploymentInformation(
+  result: AWS.S3.CommonPrefix,
+): Promise<Deployment | null> {
   if (!result.Prefix) return null;
 
   const prefix = result.Prefix;
@@ -41,7 +42,10 @@ async function getDeploymentLastModified(prefix: string): Promise<Date> {
  * List all deployments for a given client and project
  * @todo sort by lastModified
  */
-export async function listDeployments(client: string, project: string): Promise<Deployment[]> {
+export async function listDeployments(
+  client: string,
+  project: string,
+): Promise<Deployment[]> {
   const result = await s3
     .listObjects({
       Bucket: BUCKET,
@@ -53,7 +57,9 @@ export async function listDeployments(client: string, project: string): Promise<
 
   const paths = result.CommonPrefixes;
   if (!paths) {
-    throw new Error(`Could't find deployments for client ${client}, project ${project}`);
+    throw new Error(
+      `Could't find deployments for client ${client}, project ${project}`,
+    );
   }
 
   const filter = reject<Deployment>(isNull);
@@ -64,6 +70,10 @@ export async function listDeployments(client: string, project: string): Promise<
   return sort(filter(deployments));
 }
 
-// export async function upload(client: string, project: string, sourceFolder: string) {
-//   const path = join(process.cwd(), sourceFolder);
-// }
+export async function syncFolder(
+  client: string,
+  project: string,
+  distFolder: string,
+) {
+  assertIsDir(distFolder);
+}

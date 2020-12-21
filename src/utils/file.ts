@@ -1,7 +1,5 @@
 import path, { basename, join } from "path";
-import { existsSync, lstatSync, PathLike, readdirSync } from "fs";
-import { assert } from "console";
-import { AssertionError } from "assert";
+import { existsSync, lstatSync, readdirSync } from "fs";
 
 export const CONFIG_FILE = "necro.json";
 
@@ -70,5 +68,46 @@ export function assertNotEmpty(path: string): void {
   const ls = readdirSync(path);
   if (!ls.length) {
     throw new Error(`Dir ${path} is empty.`);
+  }
+}
+
+type ListDirOptions = {
+  /** Whether or not directories should be included in the results. */
+  includeDirs?: boolean;
+  /** Traverse the dir using breadth or depth first search. */
+  mode?: "BFS" | "DFS";
+};
+/**
+ * Deeply list the files of a directory using a BFS algorithm.
+ */
+export function listDir(base: string, options?: ListDirOptions): string[] {
+  const defaultOptions = { includeDirs: false, mode: "BFS" };
+  const { includeDirs, mode } = { ...defaultOptions, ...options };
+
+  const found: string[] = [];
+  const queue = [base];
+  while (queue.length) {
+    const current = mode === "BFS" ? queue.shift()! : queue.pop()!;
+    const recurse = isDir(current);
+    if (recurse) {
+      const ls = readdirSync(current).map((x) => join(current, x));
+      queue.push(...ls);
+    }
+    if (!recurse || includeDirs) {
+      found.push(current);
+    }
+  }
+  return found;
+}
+
+/**
+ * Tells wheter or not a path is a directory.
+ */
+function isDir(path: string) {
+  try {
+    const stat = lstatSync(path);
+    return stat.isDirectory();
+  } catch (err) {
+    return false;
   }
 }
