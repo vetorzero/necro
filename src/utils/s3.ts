@@ -1,12 +1,17 @@
 import AWS from "aws-sdk";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
-import { basename } from "path";
-import { assertIsDir, listDir } from "./file";
+import { basename, relative } from "path";
+import { assertIsDir, listDir, ListDirOptionsMode } from "./file";
+import child_process from "child_process";
+import { on } from "commander";
+import { Readable } from "stream";
+import { log } from "./log";
 
 const BUCKET = "demo.vzlab.com.br";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
+// const s3api = new AWS.API
 
 export type Deployment = {
   prefix: string;
@@ -76,4 +81,48 @@ export async function syncFolder(
   distFolder: string,
 ) {
   assertIsDir(distFolder);
+
+  log(`Syncing folders:
+./build --> s3://${BUCKET}/test/path/build
+`);
+  await execAwsSync();
+  log(`Folders synced successfully!\n`);
+}
+
+async function execAwsSync(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const username = encodeURIComponent("cle:-ito");
+    const password = encodeURIComponent("ra%st@");
+    /** @todo decode in the lambda */
+    const meta = {
+      auth: `${username}:${password}`,
+    };
+
+    const cp = child_process.spawn(
+      "aws",
+      [
+        "s3",
+        "sync",
+        /** @todo set cwd as the necro root */
+        "build",
+        /** @todo create path */
+        `s3://${BUCKET}/test/path/build`,
+        "--metadata",
+        JSON.stringify(meta),
+      ],
+      {},
+    );
+
+    // redirect streams
+    cp.stderr.pipe(process.stderr);
+    cp.stdout.pipe(process.stdout);
+
+    // callbacks
+    cp.on("exit", (...x) => {
+      resolve();
+    });
+    cp.on("error", (...x) => {
+      reject(new Error("Couldn't sync folders"));
+    });
+  });
 }

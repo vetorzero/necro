@@ -71,23 +71,33 @@ export function assertNotEmpty(path: string): void {
   }
 }
 
-type ListDirOptions = {
+export enum ListDirOptionsMode {
+  /** Wide then deep */
+  BFS,
+  /** Deep then wide */
+  DFS,
+}
+export type ListDirOptions = {
   /** Whether or not directories should be included in the results. */
   includeDirs?: boolean;
   /** Traverse the dir using breadth or depth first search. */
-  mode?: "BFS" | "DFS";
+  mode?: ListDirOptionsMode;
 };
 /**
  * Deeply list the files of a directory using a BFS algorithm.
  */
 export function listDir(base: string, options?: ListDirOptions): string[] {
-  const defaultOptions = { includeDirs: false, mode: "BFS" };
+  const defaultOptions = {
+    includeDirs: false,
+    mode: ListDirOptionsMode.BFS,
+  };
   const { includeDirs, mode } = { ...defaultOptions, ...options };
 
   const found: string[] = [];
   const queue = [base];
   while (queue.length) {
-    const current = mode === "BFS" ? queue.shift()! : queue.pop()!;
+    const current =
+      mode === ListDirOptionsMode.BFS ? queue.shift()! : queue.pop()!;
     const recurse = isDir(current);
     if (recurse) {
       const ls = readdirSync(current).map((x) => join(current, x));
