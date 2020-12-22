@@ -11,8 +11,18 @@ import { syncDir } from "../utils/s3";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 
+/**
+ * @todo set passwords only on html files
+ */
 export default function raise() {
-  return new Command("raise").action(action);
+  return new Command("raise")
+    .storeOptionsAsProperties(false)
+    .description("Publish a new version of a demo.")
+    .option(
+      "--version [number-or-name]",
+      "The version of the demo. Defaults to the date and time of the invocation.",
+    )
+    .action(action);
 }
 
 async function action(command: Command) {
@@ -32,9 +42,10 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
+  const version = encodeURIComponent(command.opts().version || createVersion());
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.distFolder);
-  const targetDir = `${config.client}/${config.project}`;
+  const targetDir = `${config.client}/${config.project}/${version}`;
 
   try {
     assertFileExists(sourceDir);
@@ -67,8 +78,15 @@ Make sure to build yout project before raising the demo.`);
       ":" +
       encodeURIComponent(config.password);
   }
-  console.log(options);
   await syncDir(sourceDir, targetDir, options);
 
   success("Demo successfully raised");
+}
+
+/**
+ * Get the current date as YYYY-MM-DD.
+ */
+function createVersion(): string {
+  const now = new Date();
+  return now.toISOString().split("T")[0];
 }

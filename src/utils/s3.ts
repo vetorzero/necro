@@ -93,7 +93,8 @@ ${sourceDir} --> s3://${BUCKET}/${targetDir}
         `s3://${BUCKET}/${targetDir}`,
         "--metadata",
         JSON.stringify(meta),
-        "--dryrun",
+        "--metadata-directive",
+        "REPLACE",
       ],
       {},
     );
