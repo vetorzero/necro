@@ -1,7 +1,7 @@
 #!/usr/bin/env ts-node-script
 
 import { program } from "commander";
-import { readdirSync } from "fs";
+import { readdir } from "fs/promises";
 import { join } from "path";
 import { error } from "./src/utils/log";
 
@@ -22,7 +22,7 @@ async function main() {
 
   // load commands
   const commandsDir = join(__dirname, "src/commands");
-  const commandFiles = readdirSync(commandsDir);
+  const commandFiles = await readdir(commandsDir);
   await Promise.all(
     commandFiles.map(async (file) => {
       const path = join(commandsDir, file);

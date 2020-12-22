@@ -1,10 +1,12 @@
+import chalk from "chalk";
 import { Command } from "commander";
 import { log } from "../utils/log";
-import { listDeployments, Deployment } from "../utils/s3";
-import chalk from "chalk";
+import { listDeployments } from "../utils/s3";
 
 export default function list() {
-  return new Command("list").description("List all versions of the current site.").action(action);
+  return new Command("list")
+    .description("List all versions of the current site.")
+    .action(action);
 }
 
 async function action(command: Command) {
