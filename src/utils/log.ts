@@ -5,7 +5,7 @@ export function success(arg0: any, ...args: any[]) {
   console.log(chalk.green(format(arg0, ...args)));
 }
 export function info(arg0: any, ...args: any[]) {
-  console.info(chalk.green(format(arg0, ...args)));
+  console.info(chalk.blue(format(arg0, ...args)));
 }
 export function log(arg0: any, ...args: any[]) {
   console.log(arg0, ...args);

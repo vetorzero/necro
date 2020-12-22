@@ -1,11 +1,11 @@
 import { Command } from "commander";
-import inquirer, { QuestionCollection } from "inquirer";
-import { kebabCase, pick } from "lodash/fp";
-import { CONFIG_FILE, guessClientName, guessProjectName } from "../utils/file";
 import { existsSync, writeFileSync } from "fs";
+import inquirer, { QuestionCollection } from "inquirer";
+import { kebabCase } from "lodash/fp";
 import { join } from "path";
+import { CONFIG_FILE } from "../utils/config";
+import { guessClientName, guessProjectName } from "../utils/file";
 import log from "../utils/log";
-import chalk from "chalk";
 
 const questions: QuestionCollection = [
   {
@@ -72,6 +72,7 @@ async function action(command: Command) {
   if (!fileExists() || overwrite) {
     const json = JSON.stringify(answers, null, 2);
     writeFileSync(filePath, json);
-    log.success(`Config file written:\n\t${filePath}`);
+    log.success(`Config file written:
+${filePath}`);
   }
 }

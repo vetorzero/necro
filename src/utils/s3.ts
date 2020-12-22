@@ -75,40 +75,27 @@ export async function listDeployments(
   return sort(filter(deployments));
 }
 
-export async function syncFolder(
-  client: string,
-  project: string,
-  distFolder: string,
+export async function syncDir(
+  sourceDir: string,
+  targetDir: string,
+  meta: { [k: string]: any } = {},
 ) {
-  assertIsDir(distFolder);
+  assertIsDir(sourceDir);
 
   log(`Syncing folders:
-./build --> s3://${BUCKET}/test/path/build
+${sourceDir} --> s3://${BUCKET}/${targetDir}
 `);
-  await execAwsSync();
-  log(`Folders synced successfully!\n`);
-}
-
-async function execAwsSync(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const username = encodeURIComponent("cle:-ito");
-    const password = encodeURIComponent("ra%st@");
-    /** @todo decode in the lambda */
-    const meta = {
-      auth: `${username}:${password}`,
-    };
-
+  await new Promise<void>((resolve, reject) => {
     const cp = child_process.spawn(
       "aws",
       [
         "s3",
         "sync",
-        /** @todo set cwd as the necro root */
-        "build",
-        /** @todo create path */
-        `s3://${BUCKET}/test/path/build`,
+        sourceDir,
+        `s3://${BUCKET}/${targetDir}`,
         "--metadata",
         JSON.stringify(meta),
+        "--dryrun",
       ],
       {},
     );
@@ -125,4 +112,6 @@ async function execAwsSync(): Promise<void> {
       reject(new Error("Couldn't sync folders"));
     });
   });
+
+  log(`Folders synced successfully!\n`);
 }

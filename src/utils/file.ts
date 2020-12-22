@@ -1,7 +1,6 @@
 import path, { basename, join } from "path";
-import { existsSync, lstatSync, readdirSync } from "fs";
-
-export const CONFIG_FILE = "necro.json";
+import { existsSync, statSync, readdirSync } from "fs";
+import { CONFIG_FILE } from "./config";
 
 export function guessProjectName(): string {
   return basename(process.cwd());
@@ -55,7 +54,7 @@ export function assertFileExists(path: string): void {
  * Asserts that path is a valid dir.
  */
 export function assertIsDir(path: string): void {
-  const stat = lstatSync(path);
+  const stat = statSync(path);
   if (!stat.isDirectory()) {
     throw new Error(`Path ${path} is not a dir.`);
   }
@@ -115,7 +114,7 @@ export function listDir(base: string, options?: ListDirOptions): string[] {
  */
 function isDir(path: string) {
   try {
-    const stat = lstatSync(path);
+    const stat = statSync(path);
     return stat.isDirectory();
   } catch (err) {
     return false;
