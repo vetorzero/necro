@@ -8,7 +8,7 @@ import {
 } from "../utils/file";
 import { error, log, success } from "../utils/log";
 import { syncDir } from "../utils/s3";
-import { getConfig } from "../utils/config";
+import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 
 export default function raise() {
@@ -20,13 +20,20 @@ async function action(command: Command) {
   try {
     config = getConfig();
   } catch (err) {
-    const cmd = chalk.bold("necro init");
-    error(`Couldn't find a necro config file.
+    if (err instanceof ValidationError) {
+      error(`There was a problem validating your configuration. Check it out:
+${err.errorsText}`);
+    } else {
+      const cmd = chalk.bold("necro init");
+      error(`Couldn't find a necro config file.
 Configure necro by running ${cmd} in the root directory of your project.`);
+    }
+
     throw err;
   }
+
   const baseDir = getProjectBaseDirectory()!;
-  const sourceDir = join(baseDir, config.distDir);
+  const sourceDir = join(baseDir, config.distFolder);
   const targetDir = `${config.client}/${config.project}`;
 
   try {
@@ -53,9 +60,15 @@ Make sure to build yout project before raising the demo.`);
     throw err;
   }
 
-  await syncDir(sourceDir, targetDir, {
-    auth: "usr:senha",
-  });
+  const options: { [k: string]: any } = {};
+  if (!config.public) {
+    options["auth"] =
+      encodeURIComponent(config.username) +
+      ":" +
+      encodeURIComponent(config.password);
+  }
+  console.log(options);
+  await syncDir(sourceDir, targetDir, options);
 
   success("Demo successfully raised");
 }

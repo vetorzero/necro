@@ -14,6 +14,7 @@
   "author": "Luiz \"Felds\" Liscia",
   "license": "UNLICENSED",
   "dependencies": {
+    "ajv": "^7.0.2",
     "aws-sdk": "^2.812.0",
     "chalk": "^4.1.0",
     "commander": "^6.2.1",

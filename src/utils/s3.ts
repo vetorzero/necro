@@ -1,10 +1,8 @@
 import AWS from "aws-sdk";
-import { isNull, prop, reject, sortBy } from "lodash/fp";
-import { basename, relative } from "path";
-import { assertIsDir, listDir, ListDirOptionsMode } from "./file";
 import child_process from "child_process";
-import { on } from "commander";
-import { Readable } from "stream";
+import { isNull, prop, reject, sortBy } from "lodash/fp";
+import { basename } from "path";
+import { assertIsDir } from "./file";
 import { log } from "./log";
 
 const BUCKET = "demo.vzlab.com.br";
