@@ -7,18 +7,10 @@ import { error } from "./src/utils/log";
 
 Error.stackTraceLimit = Infinity;
 
-/**
- * @TODO Subcommands:
- *
- *    raise       Publishes a new version of the demo site
- *    obliterate  Remove all instances of the demo site
- *    browse      Retrieves the link (?)
- */
-
 async function main() {
   program.storeOptionsAsProperties(false);
 
-  program.option("--debug", "Show extended debug information.", false);
+  program.option("--debug", "Show extended debug information.");
 
   // load commands
   const commandsDir = join(__dirname, "src/commands");
@@ -31,15 +23,19 @@ async function main() {
     }),
   );
 
-  await program.parseAsync(process.argv);
+  await program.parseAsync(process.argv).catch(commandError);
+}
+main().catch(mainError);
+
+function commandError(err: unknown): void {
+  const { debug } = program.opts();
+  if (!debug) {
+    error("\nRun your command again with --debug to see more details.");
+  } else {
+    error("\n\n", err);
+  }
 }
 
-main().catch((err) => {
-  const { debug } = program.opts();
-
-  if (debug) {
-    error("\n\n", err);
-  } else {
-    error("\nRun your command again with --debug to see more details.");
-  }
-});
+function mainError(err: unknown): void {
+  error("Error on main: ", err);
+}
