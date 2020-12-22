@@ -4,7 +4,11 @@ import inquirer, { QuestionCollection } from "inquirer";
 import { kebabCase } from "lodash/fp";
 import { join } from "path";
 import { CONFIG_FILE } from "../utils/config";
-import { guessClientName, guessProjectName } from "../utils/file";
+import {
+  directoryExists,
+  guessClientName,
+  guessProjectName,
+} from "../utils/file";
 import log from "../utils/log";
 
 const questions: QuestionCollection = [
@@ -39,6 +43,17 @@ const questions: QuestionCollection = [
     filter: (password: string) => (password.length ? password : null),
   },
   {
+    name: "distFolder",
+    message: "Where are the files to be published?",
+    validate: (path) => {
+      if (!directoryExists(path)) {
+        return `The folder ${path} doesn't exist.`;
+      }
+
+      return true;
+    },
+  },
+  {
     name: "overwrite",
     message: "The necro file already exists. Overwrite?",
     type: "confirm",
@@ -61,6 +76,7 @@ export default function init() {
     .option("--public", "disable authentication")
     .option("--username [username]", "a default username for the demo")
     .option("--password [password]", "a default password for the demo")
+    .option("--dist-folder [path]", "the folder containing the built project")
     .option("--overwrite", "replace the file if it already exists")
     .action(action);
 }
