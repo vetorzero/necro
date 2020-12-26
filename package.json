@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "description": "A command line tool to view, publish and take down demo sites.",
   "bin": {
-    "necro": "./index.ts"
+    "necro-ts": "./index.ts",
+    "necro": "./dist/index.js"
   },
   "main": "./dist/index.js",
   "scripts": {

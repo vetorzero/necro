@@ -7,6 +7,9 @@ export function success(arg0: any, ...args: any[]) {
 export function info(arg0: any, ...args: any[]) {
   console.info(chalk.blue(format(arg0, ...args)));
 }
+export function warn(arg0: any, ...args: any[]) {
+  console.info(chalk.yellow(format(arg0, ...args)));
+}
 export function log(arg0: any, ...args: any[]) {
   console.log(arg0, ...args);
 }
@@ -17,6 +20,7 @@ export function error(arg0: any, ...args: any[]) {
 export default {
   success,
   info,
+  warn,
   log,
   error,
 };
