@@ -17,6 +17,7 @@ import chalk from "chalk";
 export default function raise() {
   return new Command("raise")
     .storeOptionsAsProperties(false)
+    .alias("publish")
     .description("Publish a new version of a demo.")
     .option(
       "--version [number-or-name]",
