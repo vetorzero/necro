@@ -16,6 +16,7 @@ const chalk_1 = __importDefault(require("chalk"));
 function raise() {
     return new commander_1.Command("raise")
         .storeOptionsAsProperties(false)
+        .alias("publish")
         .description("Publish a new version of a demo.")
         .option("--version [number-or-name]", "The version of the demo. Defaults to the date and time of the invocation.")
         .action(action);
