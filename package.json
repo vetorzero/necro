@@ -1,6 +1,5 @@
 {
   "name": "@vetorzero/necro",
-  "private": true,
   "version": "0.0.2",
   "description": "A command line tool to view, publish and take down demo sites.",
   "files": [
