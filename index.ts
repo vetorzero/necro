@@ -1,5 +1,3 @@
-#!/usr/bin/env ts-node-script
-
 import { program } from "commander";
 import { readdir } from "fs/promises";
 import { join } from "path";
