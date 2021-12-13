@@ -5,7 +5,7 @@ import { basename } from "path";
 import { assertIsDir } from "./file";
 import { log } from "./log";
 
-/** @todo make this value configurable */
+// @TODO make bucket configurable
 const BUCKET = "demo.vzlab.com.br";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
