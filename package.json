@@ -5,14 +5,14 @@
   "files": [
     "dist/"
   ],
-  "main": "dist/index.js",
   "bin": {
     "necro": "dist/index.js"
   },
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
     "prepublish": "npm run build",
-    "build": "tsc"
+    "link": "npm run build && npm link",
+    "build": "rm -fr dist/* && tsc && chmod +x dist/index.js"
   },
   "author": "Luiz \"Felds\" Liscia",
   "license": "UNLICENSED",
