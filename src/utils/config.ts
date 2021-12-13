@@ -8,6 +8,7 @@ export const CONFIG_FILE = "necro.json";
 type ConfigCommon = {
   client: string;
   project: string;
+  bucket: string;
   distFolder: string;
 };
 type ConfigPrivate = ConfigCommon & {
@@ -24,6 +25,7 @@ function validateConfig(config: unknown): asserts config is Config {
   const schema: JSONSchemaType<Config> = {
     type: "object",
     properties: {
+      bucket: { type: "string" },
       client: { type: "string" },
       project: { type: "string" },
       distFolder: { type: "string" },
@@ -45,7 +47,7 @@ function validateConfig(config: unknown): asserts config is Config {
         },
       },
     ],
-    required: ["client", "project", "distFolder", "public"],
+    required: ["bucket", "client", "project", "distFolder", "public"],
   };
 
   const ajv = new Ajv({ allErrors: true, verbose: true });
