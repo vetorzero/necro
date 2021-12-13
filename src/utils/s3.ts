@@ -5,11 +5,11 @@ import { basename } from "path";
 import { assertIsDir } from "./file";
 import { log } from "./log";
 
+/** @todo make this value configurable */
 const BUCKET = "demo.vzlab.com.br";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
-// const s3api = new AWS.API
 
 export type Deployment = {
   prefix: string;
