@@ -11,6 +11,7 @@
   },
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
+    "prepublish": "npm run build",
     "build": "tsc"
   },
   "author": "Luiz \"Felds\" Liscia",
