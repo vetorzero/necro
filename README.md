@@ -1,36 +1,20 @@
-## Global configs:
-
-- defaults
-  - aws
-    - region
-    - s3Bucket
-    - cfDistributionId
-    - credentials (?)
-      - accessKeyId (?)
-      - secretAccessKey (?)
-
-## Project configs
+## Configs
 
 - client
 - project
 - distFolder
+- autoVersion <sup>\*</sup>
 - public
 - username
 - password
-- aws
-  - region
+- aws: <sup>?</sup>
   - s3Bucket
   - cfDistributionId
-  - credentials (?)
-    - accessKeyId (?)
-    - secretAccessKey (?)
+  - region <sup>??</sup>
+  - credentials <sup>??</sup>
+    - accessKeyId
+    - secretAccessKey
 
-### To-do
-
-- aws
-  - region
-  - s3Bucket
-  - cfDistributionId
-  - credentials (?)
-    - accessKeyId (?)
-    - secretAccessKey (?)
+<sup>?</sup>: project optional  
+<sup>??</sup>: global optional (can be inferred from system)  
+<sup>\*</sup>: future plans
