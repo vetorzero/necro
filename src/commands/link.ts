@@ -33,7 +33,11 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
-  const deployments = await listDeployments(config.client, config.project);
+  const deployments = await listDeployments(
+    config.bucket,
+    config.client,
+    config.project,
+  );
 
   const { version } = command.opts();
   // log(command.opts());

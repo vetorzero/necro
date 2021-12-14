@@ -13,6 +13,10 @@ import log from "../utils/log";
 
 const questions: QuestionCollection = [
   {
+    name: "bucket",
+    message: "What is the bucket that will host these files?",
+  },
+  {
     name: "client",
     message: "What is the name of the client for this project?",
     filter: kebabCase,
