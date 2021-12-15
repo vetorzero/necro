@@ -78,5 +78,5 @@ type ProjectConfig = ConfigPrivate | ConfigPublic;
  * Global configurations that should be defined on `~/.necrorc.yaml`.
  */
 type GlobalConfig = {
-  aws: AWSConfig;
+  aws?: AWSConfig;
 };
