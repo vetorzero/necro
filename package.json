@@ -12,7 +12,8 @@
     "test": "echo \"No test specified\" && exit 0",
     "prepublish": "npm run build",
     "link": "npm run build && npm link",
-    "build": "rm -fr dist/* && tsc && chmod +x dist/index.js"
+    "build": "rm -fr dist/* && tsc && chmod +x dist/index.js",
+    "generate-config-schema": "ts-json-schema-generator --path src/@types/config.d.ts --expose all --out src/@schema/config.schema.json"
   },
   "author": "Luiz \"Felds\" Liscia",
   "license": "UNLICENSED",
@@ -22,12 +23,14 @@
     "chalk": "^4.1.0",
     "commander": "^6.2.1",
     "inquirer": "^7.3.3",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.20",
+    "yaml": "^1.10.2"
   },
   "devDependencies": {
     "@types/inquirer": "^7.3.1",
     "@types/lodash": "^4.14.165",
     "@types/node": "^14.14.14",
+    "ts-json-schema-generator": "^0.97.0",
     "typescript": "^4.1.3"
   }
 }

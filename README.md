@@ -3,7 +3,6 @@
 - client
 - project
 - distFolder
-- autoVersion <sup>\*</sup>
 - public
 - username
 - password
