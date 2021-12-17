@@ -68,7 +68,7 @@ function validateGlobalConfig<T extends GlobalConfig>(
  * Get the merged configs from the global (~/.necrorc.yaml) and the
  * project (ROOT/necro.yaml) config files.
  */
-export function getConfig(): ProjectConfig {
+export function getConfig(): NecroConfig {
   /** @todo load global configs */
 
   const baseDir = getProjectBaseDirectory();

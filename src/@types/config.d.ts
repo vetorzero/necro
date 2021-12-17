@@ -80,3 +80,5 @@ type ProjectConfig = ConfigPrivate | ConfigPublic;
 type GlobalConfig = {
   aws?: AWSConfig;
 };
+
+type NecroConfig = GlobalConfig & ProjectConfig;

@@ -10,6 +10,7 @@ import { error, success } from "../utils/log";
 import { syncDir } from "../utils/s3";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
+import assert from "assert";
 
 /**
  * @todo set passwords only on html files
@@ -47,13 +48,16 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.distFolder);
   const targetDir = `${config.client}/${config.project}/${version}`;
-  const bucket = config.bucket;
+  const bucket = config.aws?.hosting.s3Bucket;
+  assert(bucket, "Bucket (config.aws.hosting.s3Bucket) is not defined.");
 
   try {
     assertFileExists(sourceDir);
   } catch (err) {
-    error(`Source dir "${sourceDir}" doesn't exist.
-You should provide a valid path relative to the necro.json config file.`);
+    error(
+      `Source dir "${sourceDir}" doesn't exist.\n` +
+        `You should provide a valid path relative to the necro.json config file.`,
+    );
     throw err;
   }
 

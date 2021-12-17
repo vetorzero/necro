@@ -80,15 +80,15 @@ export async function listDeployments(
 
 export async function syncDir(
   sourceDir: string,
-  bucket: string,
   targetDir: string,
+  bucket: string,
   meta: { [k: string]: any } = {},
 ) {
   assertIsDir(sourceDir);
 
-  log(`Syncing folders:
-${sourceDir} --> s3://${bucket}/${targetDir}
-`);
+  log(`BUcket: ${bucket}`);
+  log(`Syncing folders:\n${sourceDir} --> s3://${bucket}/${targetDir}`);
+
   await new Promise<void>((resolve, reject) => {
     const cp = child_process.spawn(
       "aws",
