@@ -6,7 +6,7 @@ import {
   assertNotEmpty,
   getProjectBaseDirectory,
 } from "../utils/file";
-import { error, log, success } from "../utils/log";
+import { error, success } from "../utils/log";
 import { syncDir } from "../utils/s3";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
@@ -47,6 +47,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.distFolder);
   const targetDir = `${config.client}/${config.project}/${version}`;
+  const bucket = config.bucket;
 
   try {
     assertFileExists(sourceDir);
@@ -79,7 +80,7 @@ Make sure to build yout project before raising the demo.`);
       ":" +
       encodeURIComponent(config.password);
   }
-  await syncDir(sourceDir, targetDir, options);
+  await syncDir(sourceDir, targetDir, bucket, options);
 
   success("Demo successfully raised");
 }

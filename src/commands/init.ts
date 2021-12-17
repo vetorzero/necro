@@ -3,7 +3,7 @@ import { existsSync, writeFileSync } from "fs";
 import inquirer, { QuestionCollection } from "inquirer";
 import { kebabCase } from "lodash/fp";
 import { join } from "path";
-import { CONFIG_FILE } from "../utils/config";
+import { PROJECT_CONFIG_FILE } from "../utils/config";
 import {
   directoryExists,
   guessClientName,
@@ -12,6 +12,10 @@ import {
 import log from "../utils/log";
 
 const questions: QuestionCollection = [
+  {
+    name: "bucket",
+    message: "What is the bucket that will host these files?",
+  },
   {
     name: "client",
     message: "What is the name of the client for this project?",
@@ -62,7 +66,7 @@ const questions: QuestionCollection = [
   },
 ];
 
-const filePath = join(process.cwd(), CONFIG_FILE);
+const filePath = join(process.cwd(), PROJECT_CONFIG_FILE);
 
 function fileExists(): boolean {
   return existsSync(filePath);

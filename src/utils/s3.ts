@@ -5,9 +5,6 @@ import { basename } from "path";
 import { assertIsDir } from "./file";
 import { log } from "./log";
 
-// @TODO make bucket configurable
-const BUCKET = "demo.vzlab.com.br";
-
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
 
@@ -18,6 +15,7 @@ export type Deployment = {
 };
 
 async function getDeploymentInformation(
+  bucket: string,
   result: AWS.S3.CommonPrefix,
 ): Promise<Deployment | null> {
   if (!result.Prefix) return null;
@@ -27,31 +25,36 @@ async function getDeploymentInformation(
   return {
     prefix,
     name: basename(prefix),
-    lastModified: await getDeploymentLastModified(prefix),
+    lastModified: await getDeploymentLastModified(bucket, prefix),
   };
 }
 
-async function getDeploymentLastModified(prefix: string): Promise<Date> {
+async function getDeploymentLastModified(
+  bucket: string,
+  prefix: string,
+): Promise<Date> {
   const result = await s3
     .getObject({
-      Bucket: BUCKET,
+      Bucket: bucket,
       Key: `${prefix}index.html`,
     })
     .promise();
 
   return result.LastModified!;
 }
+
 /**
  * List all deployments for a given client and project
  * @todo sort by lastModified
  */
 export async function listDeployments(
+  bucket: string,
   client: string,
   project: string,
 ): Promise<Deployment[]> {
   const result = await s3
     .listObjects({
-      Bucket: BUCKET,
+      Bucket: bucket,
       Delimiter: "/",
       MaxKeys: 1_000_000,
       Prefix: `${client}/${project}/`,
@@ -68,20 +71,23 @@ export async function listDeployments(
   const filter = reject<Deployment>(isNull);
   const sort = sortBy<Deployment>(prop("lastModified"));
 
-  const deployments = await Promise.all(paths.map(getDeploymentInformation));
+  const deployments = await Promise.all(
+    paths.map((path) => getDeploymentInformation(bucket, path)),
+  );
 
   return sort(filter(deployments));
 }
 
 export async function syncDir(
   sourceDir: string,
+  bucket: string,
   targetDir: string,
   meta: { [k: string]: any } = {},
 ) {
   assertIsDir(sourceDir);
 
   log(`Syncing folders:
-${sourceDir} --> s3://${BUCKET}/${targetDir}
+${sourceDir} --> s3://${bucket}/${targetDir}
 `);
   await new Promise<void>((resolve, reject) => {
     const cp = child_process.spawn(
@@ -90,7 +96,7 @@ ${sourceDir} --> s3://${BUCKET}/${targetDir}
         "s3",
         "sync",
         sourceDir,
-        `s3://${BUCKET}/${targetDir}`,
+        `s3://${bucket}/${targetDir}`,
         "--metadata",
         JSON.stringify(meta),
         "--metadata-directive",
