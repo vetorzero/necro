@@ -1,3 +1,4 @@
+import assert from "assert";
 import chalk from "chalk";
 import { Command } from "commander";
 import { getConfig, ValidationError } from "../utils/config";
@@ -33,8 +34,11 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
+  const bucket = config.aws?.hosting.s3Bucket;
+  assert(bucket, "Bucket not defined.");
+
   const deployments = await listDeployments(
-    config.bucket,
+    bucket,
     config.client,
     config.project,
   );
@@ -54,10 +58,4 @@ Configure necro by running ${cmd} in the root directory of your project.`);
 Use ${cmd} to get the available deployments.
 `);
   }
-
-  // for (const deployment of deployments) {
-  //   const name = chalk.bold(deployment.name);
-  //   log(`${name}\tLast modified: ${deployment.lastModified.toUTCString()}`);
-  //   log("");
-  // }
 }
