@@ -1,6 +1,7 @@
 {
   "name": "@vetorzero/necro",
-  "version": "0.0.2",
+  "public": true,
+  "version": "1.0.0",
   "description": "A command line tool to view, publish and take down demo sites.",
   "files": [
     "dist/"
@@ -10,7 +11,7 @@
   },
   "scripts": {
     "test": "echo \"No test specified\" && exit 0",
-    "prepublish": "npm run build",
+    "_prepublishOnly": "npm run build",
     "link": "npm run build && npm link",
     "build": "rm -fr dist/* && tsc && chmod +x dist/index.js",
     "generate-config-schema": "ts-json-schema-generator --path src/@types/config.d.ts --expose all --out src/@schema/config.schema.json"

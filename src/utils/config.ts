@@ -6,23 +6,19 @@ import assert from "assert";
 import { homedir } from "os";
 import yaml from "yaml";
 import { merge } from "lodash";
+import schema from "../@schema/config.schema.json";
 
 export const PROJECT_CONFIG_FILE = "necro.json";
 export const GLOBAL_CONFIG_FILE = join(homedir(), ".necrorc.yaml");
 
+// create schema validator
+const ajv = new Ajv({ allErrors: true, verbose: true });
+
 // load schema
-const file = readFileSync(
-  join(__dirname, "../@schema/config.schema.json"),
-  "utf8",
-);
-const schema = JSON.parse(file);
 assert(
   schema,
   "Invalid schema. Run `npm run generate-config-schema` to generate config schema from the definition file.",
 );
-
-// create schema validator
-const ajv = new Ajv({ allErrors: true, verbose: true });
 ajv.addSchema(schema);
 
 export class ValidationError extends Error {
