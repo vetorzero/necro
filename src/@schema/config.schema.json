@@ -15,9 +15,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "hosting"
-      ],
+      "required": ["hosting"],
       "type": "object"
     },
     "AWSCredentialsConfig": {
@@ -31,10 +29,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "id",
-        "secret"
-      ],
+      "required": ["id", "secret"],
       "type": "object"
     },
     "ConfigCommon": {
@@ -61,12 +56,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "client",
-        "project",
-        "distFolder",
-        "public"
-      ],
+      "required": ["client", "project", "distFolder", "public"],
       "type": "object"
     },
     "ConfigPrivate": {
@@ -137,12 +127,7 @@
           "type": "boolean"
         }
       },
-      "required": [
-        "client",
-        "distFolder",
-        "project",
-        "public"
-      ],
+      "required": ["client", "distFolder", "project", "public"],
       "type": "object"
     },
     "GlobalConfig": {
@@ -166,10 +151,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "s3Bucket",
-        "cfDistributionId"
-      ],
+      "required": ["s3Bucket", "cfDistributionId"],
       "type": "object"
     },
     "Partial<AWSConfig>": {

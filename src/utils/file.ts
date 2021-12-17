@@ -1,6 +1,6 @@
 import path, { basename, join } from "path";
 import { existsSync, statSync, readdirSync } from "fs";
-import { CONFIG_FILE } from "./config";
+import { PROJECT_CONFIG_FILE } from "./config";
 
 export function guessProjectName(): string {
   return basename(process.cwd());
@@ -19,9 +19,9 @@ export function directoryExists(path: string) {
 }
 
 /**
- * Find the closest folder backwards containing a necro.json file.
+ * Find the closest folder backwards containing a necro config file.
  *
- * @returns A string with the folder, null otherwise.
+ * @returns The path to the project dir, null otherwise.
  */
 export function getProjectBaseDirectory(): string | null {
   const currentFolder = process.cwd();
@@ -32,7 +32,7 @@ export function getProjectBaseDirectory(): string | null {
 
   while (parts.length) {
     const scanningPath = path.join("/", ...parts);
-    if (existsSync(join(scanningPath, CONFIG_FILE))) {
+    if (existsSync(join(scanningPath, PROJECT_CONFIG_FILE))) {
       return scanningPath;
     }
     parts.pop();
