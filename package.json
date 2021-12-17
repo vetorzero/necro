@@ -1,7 +1,7 @@
 {
   "name": "@vetorzero/necro",
   "public": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A command line tool to view, publish and take down demo sites.",
   "files": [
     "dist/"
