@@ -4,6 +4,7 @@ import yaml from "yaml";
 
 // @todo add link to "https://console.aws.amazon.com/iam/home#/security_credentials"
 const questions: QuestionCollection = [
+  // credentials
   {
     type: "list",
     name: "_awsCredentials",
@@ -11,7 +12,7 @@ const questions: QuestionCollection = [
     choices: [
       {
         value: false,
-        name: "Use system credentials configured by AWS CLI",
+        name: "Use system credentials configured by AWS CLI (recommended)",
       },
       { value: true, name: "Specify the user credentials for necro" },
     ],
@@ -34,6 +35,7 @@ const questions: QuestionCollection = [
       answer.length === 40 ||
       `The secret must be 40 characters long. ${answer.length} given.`,
   },
+  // region
   {
     type: "list",
     name: "_awsRegion",
@@ -41,7 +43,7 @@ const questions: QuestionCollection = [
     choices: [
       {
         value: false,
-        name: "Use default system region configured by AWS CLI",
+        name: "Use default system region configured by AWS CLI (recommended)",
       },
       { value: true, name: "Specify the region manually" },
     ],
@@ -55,6 +57,36 @@ const questions: QuestionCollection = [
       !!answer.match(/^\w+-\w+-\w+$/) ||
       `Region must match the string format: ab-cde-1`,
   },
+  // hosting
+  {
+    type: "list",
+    name: "_awsHosting",
+    message: "AWS Hosting",
+    choices: [
+      {
+        value: true,
+        name: "Configure default hosting for all projects. (recommended)",
+      },
+      {
+        value: false,
+        name: "Don't configure default hosting. Every project will be configured separately.",
+      },
+    ],
+  },
+  {
+    type: "input",
+    name: "aws.hosting.s3Bucket",
+    message: "S3 bucket",
+    when: (prev) => prev._awsHosting,
+    validate: (answer: string) => answer.length > 0 || `This must not be empty`,
+  },
+  {
+    type: "input",
+    name: "aws.hosting.cfDistributionId",
+    message: "Cloudfront distribution ID",
+    when: (prev) => prev._awsHosting,
+    validate: (answer: string) => answer.length > 0 || `This must not be empty`,
+  },
 ];
 
 export default function configCommand() {
@@ -67,7 +99,12 @@ async function action(command: Command) {
   const options = command.opts();
   const answers = await inquirer.prompt(questions, options);
 
-  console.log(yaml.stringify(answers));
+  console.log(answers);
 
-  console.log({ answers });
+  // remove temp values from inquirer
+  for (const k in answers) {
+    if (k.startsWith("_")) delete answers[k];
+  }
+
+  console.log(yaml.stringify(answers));
 }
