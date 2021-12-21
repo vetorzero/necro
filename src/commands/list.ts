@@ -28,7 +28,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
-  const bucket = config.aws?.hosting.s3Bucket;
+  const bucket = config.aws?.hosting?.s3Bucket;
   assert(bucket, "Bucket not defined.");
 
   const deployments = await listDeployments(
