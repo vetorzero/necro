@@ -48,7 +48,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.distFolder);
   const targetDir = `${config.client}/${config.project}/${version}`;
-  const bucket = config.aws?.hosting.s3Bucket;
+  const bucket = config.aws?.hosting?.s3Bucket;
   assert(bucket, "Bucket (config.aws.hosting.s3Bucket) is not defined.");
 
   try {
@@ -64,16 +64,20 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   try {
     assertIsDir(sourceDir);
   } catch (err) {
-    error(`Source folder "${sourceDir}" is… well… not a folder.
-You should provide a valid path relative to the necro.json config file.`);
+    error(
+      `Source folder "${sourceDir}" is… well… not a folder.\n` +
+        `You should provide a valid path relative to the necro.json config file.`,
+    );
     throw err;
   }
 
   try {
     assertNotEmpty(sourceDir);
   } catch (err) {
-    error(`Source folder "${sourceDir}" is empty.
-Make sure to build yout project before raising the demo.`);
+    error(
+      `Source folder "${sourceDir}" is empty.\n` +
+        `Make sure to build yout project before raising the demo.`,
+    );
     throw err;
   }
 
