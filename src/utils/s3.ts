@@ -3,7 +3,7 @@ import child_process from "child_process";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename } from "path";
 import { assertIsDir } from "./file";
-import { log } from "./log";
+import log from "./log";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
@@ -86,8 +86,7 @@ export async function syncDir(
 ) {
   assertIsDir(sourceDir);
 
-  log(`BUcket: ${bucket}`);
-  log(`Syncing folders:\n${sourceDir} --> s3://${bucket}/${targetDir}`);
+  log.info(`Syncing folders:\n${sourceDir} --> s3://${bucket}/${targetDir}`);
 
   await new Promise<void>((resolve, reject) => {
     const cp = child_process.spawn(
@@ -118,5 +117,5 @@ export async function syncDir(
     });
   });
 
-  log(`Folders synced successfully!\n`);
+  log.info(`Folders synced successfully!\n`);
 }

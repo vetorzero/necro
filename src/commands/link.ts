@@ -2,7 +2,7 @@ import assert from "assert";
 import chalk from "chalk";
 import { Command } from "commander";
 import { getConfig, ValidationError } from "../utils/config";
-import { error, log, success, warn } from "../utils/log";
+import { error, success, warn } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
 export default function list() {
