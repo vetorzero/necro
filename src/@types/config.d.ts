@@ -48,7 +48,7 @@ type ConfigPublic = ConfigCommon & {
  */
 type AWSConfig = {
   region?: string;
-  hosting: HostingConfig;
+  hosting?: HostingConfig;
   credentials?: AWSCredentialsConfig;
 };
 
