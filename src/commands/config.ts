@@ -1,11 +1,49 @@
 import { Command } from "commander";
-import { readFileSync, readSync, writeFileSync } from "fs";
-import inquirer, { QuestionCollection, Separator } from "inquirer";
+import { readFileSync, writeFileSync } from "fs";
+import inquirer, { QuestionCollection } from "inquirer";
 import yaml from "yaml";
 import { GLOBAL_CONFIG_FILE } from "../utils/config";
 import log from "../utils/log";
 
 type InitialConfig = GlobalConfig & { [key: `_${string}`]: any };
+
+export default function configCommand() {
+  return new Command("config")
+    .description("Configure necro environment.")
+    .action(action);
+}
+
+async function action(command: Command) {
+  // const options = command.opts();
+
+  // load existing configs from file
+  let current: GlobalConfig;
+  try {
+    const file = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
+    current = yaml.parse(file);
+  } catch (_) {
+    current = {};
+  }
+
+  // add utility values
+  const initial = {
+    ...current,
+    _awsCredentials: !!current.aws?.credentials,
+    _awsRegion: !!current.aws?.region,
+    _awsHosting: !!current.aws?.hosting,
+  };
+
+  // remove utility values
+  const answers = await inquirer.prompt(getQuestions(initial));
+  for (const k in answers) {
+    if (k.startsWith("_")) delete answers[k];
+  }
+
+  // save to file
+  writeFileSync(GLOBAL_CONFIG_FILE, yaml.stringify(answers));
+
+  log.success(`Config file written: ${GLOBAL_CONFIG_FILE}`);
+}
 
 function getQuestions(initial: InitialConfig): QuestionCollection {
   return [
@@ -22,6 +60,9 @@ function getQuestions(initial: InitialConfig): QuestionCollection {
         { value: true, name: "Specify the user credentials for necro" },
       ],
       default: initial._awsCredentials,
+    },
+    async (...x: any[]) => {
+      console.log({ x });
     },
     {
       type: "input",
@@ -108,42 +149,4 @@ function getQuestions(initial: InitialConfig): QuestionCollection {
       default: initial.aws?.hosting?.cfDistributionId,
     },
   ];
-}
-
-export default function configCommand() {
-  return new Command("config")
-    .description("Configure necro environment.")
-    .action(action);
-}
-
-async function action(command: Command) {
-  // const options = command.opts();
-
-  // load existing configs from file
-  let current: GlobalConfig;
-  try {
-    const file = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
-    current = yaml.parse(file);
-  } catch (_) {
-    current = {};
-  }
-
-  // add utility values
-  const initial = {
-    ...current,
-    _awsCredentials: !!current.aws?.credentials,
-    _awsRegion: !!current.aws?.region,
-    _awsHosting: !!current.aws?.hosting,
-  };
-
-  // remove utility values
-  const answers = await inquirer.prompt(getQuestions(initial));
-  for (const k in answers) {
-    if (k.startsWith("_")) delete answers[k];
-  }
-
-  // save to file
-  writeFileSync(GLOBAL_CONFIG_FILE, yaml.stringify(answers));
-
-  log.success(`Config file written: ${GLOBAL_CONFIG_FILE}`);
 }
