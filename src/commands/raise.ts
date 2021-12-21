@@ -11,6 +11,7 @@ import { syncDir } from "../utils/s3";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 import assert from "assert";
+import { sync } from "../lib/s3/sync";
 
 /**
  * @todo set passwords only on html files
@@ -88,7 +89,10 @@ Configure necro by running ${cmd} in the root directory of your project.`);
       ":" +
       encodeURIComponent(config.password);
   }
-  await syncDir(sourceDir, targetDir, bucket, options);
+
+  await sync(sourceDir, targetDir, bucket, options);
+
+  // await syncDir(sourceDir, targetDir, bucket, options);
 
   success("Demo successfully raised");
 }
