@@ -80,7 +80,7 @@ export function getConfig(): NecroConfig {
   validateProjectConfig(projectConfig);
 
   const globalConfigFile = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
-  const globalConfig = yaml.parse(globalConfigFile);
+  const globalConfig = yaml.parse(globalConfigFile) ?? {};
   validateGlobalConfig(globalConfig);
 
   return merge(globalConfig, projectConfig);

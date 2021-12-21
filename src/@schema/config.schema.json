@@ -15,7 +15,6 @@
           "type": "string"
         }
       },
-      "required": ["hosting"],
       "type": "object"
     },
     "AWSCredentialsConfig": {
@@ -29,7 +28,10 @@
           "type": "string"
         }
       },
-      "required": ["id", "secret"],
+      "required": [
+        "id",
+        "secret"
+      ],
       "type": "object"
     },
     "ConfigCommon": {
@@ -56,7 +58,12 @@
           "type": "boolean"
         }
       },
-      "required": ["client", "project", "distFolder", "public"],
+      "required": [
+        "client",
+        "project",
+        "distFolder",
+        "public"
+      ],
       "type": "object"
     },
     "ConfigPrivate": {
@@ -127,7 +134,12 @@
           "type": "boolean"
         }
       },
-      "required": ["client", "distFolder", "project", "public"],
+      "required": [
+        "client",
+        "distFolder",
+        "project",
+        "public"
+      ],
       "type": "object"
     },
     "GlobalConfig": {
@@ -151,8 +163,87 @@
           "type": "string"
         }
       },
-      "required": ["s3Bucket", "cfDistributionId"],
+      "required": [
+        "s3Bucket",
+        "cfDistributionId"
+      ],
       "type": "object"
+    },
+    "NecroConfig": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "aws": {
+              "$ref": "#/definitions/AWSConfig"
+            },
+            "client": {
+              "description": "Who's the client that this demo will be sent to?",
+              "type": "string"
+            },
+            "distFolder": {
+              "description": "Where do the built files live?",
+              "type": "string"
+            },
+            "password": {
+              "type": "string"
+            },
+            "project": {
+              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
+              "type": "string"
+            },
+            "public": {
+              "const": false,
+              "description": "Whether or not this demo will require a password.",
+              "type": "boolean"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "client",
+            "distFolder",
+            "password",
+            "project",
+            "public",
+            "username"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "aws": {
+              "$ref": "#/definitions/AWSConfig"
+            },
+            "client": {
+              "description": "Who's the client that this demo will be sent to?",
+              "type": "string"
+            },
+            "distFolder": {
+              "description": "Where do the built files live?",
+              "type": "string"
+            },
+            "project": {
+              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
+              "type": "string"
+            },
+            "public": {
+              "const": true,
+              "description": "Whether or not this demo will require a password.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "client",
+            "distFolder",
+            "project",
+            "public"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "Partial<AWSConfig>": {
       "additionalProperties": false,
