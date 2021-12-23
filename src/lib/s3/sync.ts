@@ -34,7 +34,6 @@ export async function sync(
     ? targetDir
     : targetDir + "/";
 
-  console.log(bucket, targetDir);
   let response: AWS.S3.ListObjectsV2Output | null = null;
   do {
     log.debug("Making request...");
@@ -76,20 +75,18 @@ export async function sync(
     }),
   );
 
-  console.log("remote", remoteFiles);
-  console.log("local", localFiles);
+  // console.log("remote", remoteFiles);
+  // console.log("local", localFiles);
 
   // compare files
   // const keepFiles = _.intersectionWith(remoteFiles, localFiles, _.isEqual);
   // console.log("keep", keepFiles);
 
-  console.time();
   const deleteFiles = _.differenceWith(remoteFiles, localFiles, _.isEqual);
   // console.log("delete", deleteFiles);
 
   const uploadFiles = _.differenceWith(localFiles, remoteFiles, _.isEqual);
   // console.log("upload", uploadFiles);
-  console.timeEnd();
 
   // delete files
   for (const f of deleteFiles) {
