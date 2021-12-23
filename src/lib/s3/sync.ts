@@ -91,6 +91,22 @@ export async function sync(
   // console.log("upload", uploadFiles);
   console.timeEnd();
 
+  // delete files
+  for (const f of deleteFiles) {
+    const startTime = performance.now();
+    process.stdout.write(chalk`{red ✕ ${f.path}...} `);
+
+    await s3
+      .deleteObject({
+        Bucket: bucket,
+        Key: targetDirWithSlash + f.path,
+      })
+      .promise();
+
+    const duration = performance.now() - startTime;
+    process.stdout.write(chalk`{red Done! (${duration.toFixed(0)}ms)}\n`);
+  }
+
   // upload new files
   for (const f of uploadFiles) {
     const startTime = performance.now();
@@ -107,22 +123,6 @@ export async function sync(
 
     const duration = performance.now() - startTime;
     process.stdout.write(chalk`{green Done! (${duration.toFixed(0)}ms)}\n`);
-  }
-
-  // delete files
-  for (const f of deleteFiles) {
-    const startTime = performance.now();
-    process.stdout.write(chalk`{red ✕ ${f.path}...} `);
-
-    await s3
-      .deleteObject({
-        Bucket: bucket,
-        Key: targetDirWithSlash + f.path,
-      })
-      .promise();
-
-    const duration = performance.now() - startTime;
-    process.stdout.write(chalk`{red Done! (${duration.toFixed(0)}ms)}\n`);
   }
 
   // @todo adjust meta
