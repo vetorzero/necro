@@ -4,6 +4,7 @@ import fg from "fast-glob";
 import { join } from "path";
 import { fileMd5 } from "../../utils/crypto";
 import _ from "lodash";
+import { createReadStream } from "fs";
 
 AWS.config.credentials = new AWS.SharedIniFileCredentials();
 AWS.config.region = "sa-east-1";
@@ -76,9 +77,9 @@ export async function sync(
   console.log("remote", remoteFiles);
   console.log("local", localFiles);
 
-  // @todo compare md5
-  const keepFiles = _.intersectionWith(remoteFiles, localFiles, _.isEqual);
-  console.log("keep", keepFiles);
+  // compare files
+  // const keepFiles = _.intersectionWith(remoteFiles, localFiles, _.isEqual);
+  // console.log("keep", keepFiles);
 
   const deleteFiles = _.differenceWith(remoteFiles, localFiles, _.isEqual);
   console.log("delete", deleteFiles);
@@ -86,7 +87,21 @@ export async function sync(
   const uploadFiles = _.differenceWith(localFiles, remoteFiles, _.isEqual);
   console.log("upload", uploadFiles);
 
-  // @todo upload files
+  // upload new files
+  for (const f of uploadFiles) {
+    console.log("Uplod:", bucket + "/" + targetDirWithSlash + f.path);
+    const stream = createReadStream(join(sourceDir, f.path));
+    const req = {
+      Bucket: bucket,
+      Key: targetDirWithSlash + f.path,
+      Body: stream,
+    };
+    // console.log(req);
+    console.log("Uploading:", f.path);
+    await s3.upload(req).promise();
+    console.log("Done");
+  }
+
   // @todo delete files
   // @todo adjust meta
   // @todo sync dirs (dont ignore on fetch; add on local glob)
