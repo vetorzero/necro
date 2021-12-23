@@ -1,9 +1,6 @@
 import AWS from "aws-sdk";
-import child_process from "child_process";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename } from "path";
-import { assertIsDir } from "./file";
-import { log } from "./log";
 
 const s3Options: AWS.S3.ClientConfiguration = {};
 const s3 = new AWS.S3(s3Options);
@@ -76,47 +73,4 @@ export async function listDeployments(
   );
 
   return sort(filter(deployments));
-}
-
-export async function syncDir(
-  sourceDir: string,
-  targetDir: string,
-  bucket: string,
-  meta: { [k: string]: any } = {},
-) {
-  assertIsDir(sourceDir);
-
-  log(`BUcket: ${bucket}`);
-  log(`Syncing folders:\n${sourceDir} --> s3://${bucket}/${targetDir}`);
-
-  await new Promise<void>((resolve, reject) => {
-    const cp = child_process.spawn(
-      "aws",
-      [
-        "s3",
-        "sync",
-        sourceDir,
-        `s3://${bucket}/${targetDir}`,
-        "--metadata",
-        JSON.stringify(meta),
-        "--metadata-directive",
-        "REPLACE",
-      ],
-      {},
-    );
-
-    // redirect streams
-    cp.stderr.pipe(process.stderr);
-    cp.stdout.pipe(process.stdout);
-
-    // callbacks
-    cp.on("exit", (...x) => {
-      resolve();
-    });
-    cp.on("error", (...x) => {
-      reject(new Error("Couldn't sync folders"));
-    });
-  });
-
-  log(`Folders synced successfully!\n`);
 }

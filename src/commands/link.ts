@@ -2,7 +2,7 @@ import assert from "assert";
 import chalk from "chalk";
 import { Command } from "commander";
 import { getConfig, ValidationError } from "../utils/config";
-import { error, log, success, warn } from "../utils/log";
+import { error, success, warn } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
 export default function list() {
@@ -34,7 +34,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
-  const bucket = config.aws?.hosting.s3Bucket;
+  const bucket = config.aws?.hosting?.s3Bucket;
   assert(bucket, "Bucket not defined.");
 
   const deployments = await listDeployments(
