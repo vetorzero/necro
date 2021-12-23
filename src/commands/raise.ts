@@ -7,7 +7,6 @@ import {
   getProjectBaseDirectory,
 } from "../utils/file";
 import { error, success } from "../utils/log";
-import { syncDir } from "../utils/s3";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 import assert from "assert";
@@ -91,8 +90,6 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   }
 
   await sync(sourceDir, targetDir, bucket, options);
-
-  // await syncDir(sourceDir, targetDir, bucket, options);
 
   success("Demo successfully raised");
 }
