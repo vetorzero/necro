@@ -1,5 +1,8 @@
 import AWS from "aws-sdk";
 import log from "../../utils/log";
+import fg from "fast-glob";
+import { join } from "path";
+import { fileMd5 } from "../../utils/crypto";
 
 AWS.config.credentials = new AWS.SharedIniFileCredentials();
 AWS.config.region = "sa-east-1";
@@ -14,19 +17,21 @@ export async function sync(
 
   const s3 = new AWS.S3();
 
-  // List remote files
+  // list remote files
   log.info(`Listing remote files...`);
-  const remoteFiles = new Set<AWS.S3.Object>();
+  const remoteFiles = new Set();
+  const targetDirWithSlash = targetDir.endsWith("/")
+    ? targetDir
+    : targetDir + "/";
 
+  console.log(bucket, targetDir);
   let response: AWS.S3.ListObjectsV2Output | null = null;
-
   do {
-    console.log("Making request...");
-
+    log.debug("Making request...");
     response = await s3
       .listObjectsV2({
         Bucket: bucket,
-        Prefix: targetDir,
+        Prefix: targetDirWithSlash,
         MaxKeys: 10,
         ContinuationToken:
           response && response.NextContinuationToken
@@ -35,16 +40,37 @@ export async function sync(
       })
       .promise();
 
-    response.Contents?.forEach(remoteFiles.add, remoteFiles);
+    response.Contents?.forEach((f) => {
+      let isDir = false;
+      // if it's a dir. bail out for now.
+      if (!f.Key || f.Key.endsWith("/")) {
+        isDir = true;
+        return;
+      }
+
+      const path = f.Key?.slice(targetDirWithSlash.length);
+      remoteFiles.add({ path, md5: f.ETag?.slice(1, -1), isDir });
+    });
   } while (response.IsTruncated);
-  console.log("Files:");
-  console.log(
-    [...remoteFiles].map((f) => `  - ${f.Key} (${f.ETag})`).join("\n"),
+
+  // list local files
+  const localFiles = new Set();
+  const ls = await fg("**/*", { dot: true, cwd: sourceDir });
+  await Promise.all(
+    ls.map(async (path) => {
+      localFiles.add({
+        path,
+        md5: await fileMd5(join(sourceDir, path)),
+      });
+    }),
   );
 
-  // @todo list local files
+  console.log("remote", remoteFiles);
+  console.log("local", localFiles);
+
   // @todo compare md5
   // @todo upload files
   // @todo delete files
   // @todo adjust meta
+  // @todo sync dirs (dont ignore on fetch; add on local glob)
 }
