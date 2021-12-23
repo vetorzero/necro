@@ -3,9 +3,16 @@ import log from "../../utils/log";
 import fg from "fast-glob";
 import { join } from "path";
 import { fileMd5 } from "../../utils/crypto";
+import _ from "lodash";
 
 AWS.config.credentials = new AWS.SharedIniFileCredentials();
 AWS.config.region = "sa-east-1";
+
+type FileRow = {
+  path: string;
+  md5?: string;
+  isDir?: boolean;
+};
 
 export async function sync(
   sourceDir: string,
@@ -19,7 +26,7 @@ export async function sync(
 
   // list remote files
   log.info(`Listing remote files...`);
-  const remoteFiles = new Set();
+  const remoteFiles: FileRow[] = [];
   const targetDirWithSlash = targetDir.endsWith("/")
     ? targetDir
     : targetDir + "/";
@@ -49,18 +56,19 @@ export async function sync(
       }
 
       const path = f.Key?.slice(targetDirWithSlash.length);
-      remoteFiles.add({ path, md5: f.ETag?.slice(1, -1), isDir });
+      remoteFiles.push({ path, md5: f.ETag?.slice(1, -1), isDir });
     });
   } while (response.IsTruncated);
 
   // list local files
-  const localFiles = new Set();
+  const localFiles: FileRow[] = [];
   const ls = await fg("**/*", { dot: true, cwd: sourceDir });
   await Promise.all(
     ls.map(async (path) => {
-      localFiles.add({
+      localFiles.push({
         path,
         md5: await fileMd5(join(sourceDir, path)),
+        isDir: false,
       });
     }),
   );
@@ -69,6 +77,15 @@ export async function sync(
   console.log("local", localFiles);
 
   // @todo compare md5
+  const keepFiles = _.intersectionWith(remoteFiles, localFiles, _.isEqual);
+  console.log("keep", keepFiles);
+
+  const deleteFiles = _.differenceWith(remoteFiles, localFiles, _.isEqual);
+  console.log("delete", deleteFiles);
+
+  const uploadFiles = _.differenceWith(localFiles, remoteFiles, _.isEqual);
+  console.log("upload", uploadFiles);
+
   // @todo upload files
   // @todo delete files
   // @todo adjust meta
