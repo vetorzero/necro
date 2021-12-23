@@ -109,7 +109,22 @@ export async function sync(
     process.stdout.write(chalk`{green Done! (${duration.toFixed(0)}ms)}\n`);
   }
 
-  // @todo delete files
+  // delete files
+  for (const f of deleteFiles) {
+    const startTime = performance.now();
+    process.stdout.write(chalk`{red ✕ ${f.path}...} `);
+
+    await s3
+      .deleteObject({
+        Bucket: bucket,
+        Key: targetDirWithSlash + f.path,
+      })
+      .promise();
+
+    const duration = performance.now() - startTime;
+    process.stdout.write(chalk`{red Done! (${duration.toFixed(0)}ms)}\n`);
+  }
+
   // @todo adjust meta
   // @todo sync dirs (dont ignore on fetch; add on local glob)
 }
