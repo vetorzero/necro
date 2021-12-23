@@ -22,7 +22,7 @@ export async function sync(
   sourceDir: string,
   targetDir: string,
   bucket: string,
-  meta: { [k: string]: any } = {},
+  meta: Record<string, string> = {},
 ) {
   const targetDirWithSlash = targetDir.endsWith("/")
     ? targetDir

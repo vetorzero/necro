@@ -81,7 +81,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
-  const options: { [k: string]: any } = {};
+  const options: Record<string, string> = {};
   if (!config.public) {
     options["auth"] =
       encodeURIComponent(config.username) +
