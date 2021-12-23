@@ -1,12 +1,11 @@
 import AWS from "aws-sdk";
-import log from "../../utils/log";
-import fg from "fast-glob";
-import { join } from "path";
-import { fileMd5 } from "../../utils/crypto";
-import _ from "lodash";
-import { copyFileSync, createReadStream } from "fs";
 import chalk from "chalk";
+import fg from "fast-glob";
+import { createReadStream } from "fs";
+import _ from "lodash";
+import { join } from "path";
 import { performance } from "perf_hooks";
+import { fileMd5 } from "../../utils/crypto";
 
 type FileRow = {
   path: string;
@@ -25,10 +24,6 @@ export async function sync(
   bucket: string,
   meta: { [k: string]: any } = {},
 ) {
-  console.log({ sourceDir, targetDir, bucket, meta });
-
-  // const s3 = new AWS.S3();
-
   const targetDirWithSlash = targetDir.endsWith("/")
     ? targetDir
     : targetDir + "/";
@@ -56,7 +51,6 @@ async function listRemoteFiles(
   const files: FileRow[] = [];
   let response: AWS.S3.ListObjectsV2Output | null = null;
   do {
-    log.debug("Making request...");
     response = await s3
       .listObjectsV2({
         Bucket: bucket,
@@ -115,7 +109,7 @@ async function deleteFiles(
     await s3
       .deleteObject({
         Bucket: bucket,
-        Key: targetDir + f.path,
+        Key: join(targetDir, f.path),
       })
       .promise();
 
@@ -138,7 +132,7 @@ async function uploadFiles(
     await s3
       .upload({
         Bucket: bucket,
-        Key: join(targetDir + f.path),
+        Key: join(targetDir, f.path),
         Body: stream,
       })
       .promise();
