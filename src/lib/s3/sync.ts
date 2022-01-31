@@ -6,6 +6,7 @@ import _ from "lodash";
 import { join } from "path";
 import { performance } from "perf_hooks";
 import { fileMd5 } from "../../utils/crypto";
+import mime from "mime-types";
 
 type FileRow = {
   path: string;
@@ -128,14 +129,18 @@ async function uploadFiles(
     const startTime = performance.now();
     process.stdout.write(chalk`{green ↑ ${f.path}...} `);
 
-    const stream = createReadStream(join(sourceDir, f.path));
+    const sourceFilePath = join(sourceDir, f.path);
+    const stream = createReadStream(sourceFilePath);
     await s3
       .upload({
         Bucket: bucket,
         Key: join(targetDir, f.path),
         Body: stream,
+        ContentType: mime.lookup(sourceFilePath) || "application/octet-stream",
       })
       .promise();
+
+    // await s3.putObject
 
     const duration = performance.now() - startTime;
     process.stdout.write(chalk`{green Done! (${duration.toFixed(0)}ms)}\n`);
