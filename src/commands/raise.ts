@@ -51,6 +51,11 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   const targetDir = `${config.client}/${config.project}/${version}`;
   const bucket = config.aws?.hosting?.s3Bucket;
   assert(bucket, "Bucket (config.aws.hosting.s3Bucket) is not defined.");
+  const cfDistributionId = config.aws?.hosting?.cfDistributionId;
+  assert(
+    cfDistributionId,
+    "CloudFront distribution ID (config.aws.hosting.cfDistributionId) is not defined.",
+  );
 
   try {
     assertFileExists(sourceDir);
@@ -93,7 +98,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   await sync(sourceDir, targetDir, bucket, options);
 
   try {
-    await createDistributionInvalidation(targetDir);
+    await createDistributionInvalidation(cfDistributionId, targetDir);
   } catch (err) {
     throw err;
   }

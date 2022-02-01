@@ -108,7 +108,7 @@ async function deleteFiles(
 ): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
-    process.stdout.write(chalk`{red ❌ ${f.path}...} `);
+    process.stdout.write(chalk.red(`❌ ${f.path}... `));
 
     await s3
       .deleteObject({
@@ -130,7 +130,7 @@ async function uploadFiles(
 ): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
-    process.stdout.write(chalk`{green ✅ ${f.path}...} `);
+    process.stdout.write(chalk.green(`✅ ${f.path}... `));
 
     const sourceFilePath = join(sourceDir, f.path);
     const stream = createReadStream(sourceFilePath);
@@ -142,8 +142,6 @@ async function uploadFiles(
         ContentType: mime.lookup(sourceFilePath) || "application/octet-stream",
       })
       .promise();
-
-    // await s3.putObject
 
     const duration = performance.now() - startTime;
     process.stdout.write(chalk`{green Done! (${duration.toFixed(0)}ms)}\n`);

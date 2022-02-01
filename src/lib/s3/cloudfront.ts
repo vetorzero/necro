@@ -1,6 +1,4 @@
 import AWS from "aws-sdk";
-import chalk from "chalk";
-import { join } from "path";
 import { performance } from "perf_hooks";
 
 AWS.config.credentials = new AWS.SharedIniFileCredentials();
@@ -11,11 +9,12 @@ const cf = new AWS.CloudFront();
 /**
  * @todo invalidate only deleted files
  */
-export async function createDistributionInvalidation(prefix: string) {
+export async function createDistributionInvalidation(
+  distributionId: string,
+  prefix: string,
+) {
   const startTime = performance.now();
   process.stdout.write(`☁️  Invalidating Cloudfront cache... `);
-
-  const distributionId = "E22L6LO8OY0R0U"; // testing failed invalidations
 
   const res = await cf
     .createInvalidation({
