@@ -11,7 +11,7 @@ import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 import assert from "assert";
 import { sync } from "../lib/s3/sync";
-import { createCloudfrontDistributionInvalidation } from "../lib/s3/cloudfront";
+import { createDistributionInvalidation } from "../lib/s3/cloudfront";
 
 /**
  * @todo set passwords only on html files
@@ -93,7 +93,7 @@ Configure necro by running ${cmd} in the root directory of your project.`);
   await sync(sourceDir, targetDir, bucket, options);
 
   try {
-    await createCloudfrontDistributionInvalidation(targetDir);
+    await createDistributionInvalidation(targetDir);
   } catch (err) {
     throw err;
   }

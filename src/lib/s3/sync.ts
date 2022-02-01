@@ -19,12 +19,15 @@ AWS.config.region = "sa-east-1";
 
 const s3 = new AWS.S3();
 
+/**
+ * @returns A list of the modified file paths.
+ */
 export async function sync(
   sourceDir: string,
   targetDir: string,
   bucket: string,
   meta: Record<string, string> = {},
-) {
+): Promise<void> {
   const targetDirWithSlash = targetDir.endsWith("/")
     ? targetDir
     : targetDir + "/";
@@ -41,8 +44,8 @@ export async function sync(
   await deleteFiles(bucket, targetDirWithSlash, filesToDelete);
   await uploadFiles(bucket, sourceDir, targetDirWithSlash, filesToUpload);
 
-  // @todo adjust meta
   // @todo sync dirs (dont ignore on fetch; add on local glob)
+  // @todo meta
 }
 
 async function listRemoteFiles(
@@ -105,7 +108,7 @@ async function deleteFiles(
 ): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
-    process.stdout.write(chalk`{red ✕ ${f.path}...} `);
+    process.stdout.write(chalk`{red ❌ ${f.path}...} `);
 
     await s3
       .deleteObject({
@@ -127,7 +130,7 @@ async function uploadFiles(
 ): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
-    process.stdout.write(chalk`{green ↑ ${f.path}...} `);
+    process.stdout.write(chalk`{green ✅ ${f.path}...} `);
 
     const sourceFilePath = join(sourceDir, f.path);
     const stream = createReadStream(sourceFilePath);
