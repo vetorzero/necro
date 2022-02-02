@@ -27,7 +27,7 @@ export async function sync(
   targetDir: string,
   bucket: string,
   meta: Record<string, string> = {},
-): Promise<void> {
+): Promise<[uploaded: FileRow[], deleted: FileRow[]]> {
   const targetDirWithSlash = targetDir.endsWith("/")
     ? targetDir
     : targetDir + "/";
@@ -43,6 +43,8 @@ export async function sync(
 
   await deleteFiles(bucket, targetDirWithSlash, filesToDelete);
   await uploadFiles(bucket, sourceDir, targetDirWithSlash, filesToUpload);
+
+  return [filesToUpload, filesToDelete];
 
   // @todo sync dirs (dont ignore on fetch; add on local glob)
   // @todo meta
