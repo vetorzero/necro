@@ -45,9 +45,10 @@ export async function createDistributionInvalidation(
 }
 
 export async function getDomainName(distributionId: string) {
-  const distribution = await cf
-    .getDistribution({ Id: distributionId })
-    .promise();
+  const res = await cf.getDistribution({ Id: distributionId }).promise();
 
-  return distribution.Distribution?.DomainName;
+  return (
+    res.Distribution?.DistributionConfig.Aliases?.Items?.[0] ||
+    res.Distribution?.DomainName
+  );
 }

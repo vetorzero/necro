@@ -105,8 +105,6 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     options,
   );
 
-  // console.log({ createdFiles, deletedFiles });
-
   try {
     if (deletedFiles.length) {
       await createDistributionInvalidation(cfDistributionId, targetDir);
