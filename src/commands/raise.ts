@@ -95,10 +95,21 @@ Configure necro by running ${cmd} in the root directory of your project.`);
       encodeURIComponent(config.password);
   }
 
-  await sync(sourceDir, targetDir, bucket, options);
+  const [createdFiles, deletedFiles] = await sync(
+    sourceDir,
+    targetDir,
+    bucket,
+    options,
+  );
+
+  // console.log({ createdFiles, deletedFiles });
 
   try {
-    await createDistributionInvalidation(cfDistributionId, targetDir);
+    if (deletedFiles.length) {
+      await createDistributionInvalidation(cfDistributionId, targetDir);
+    } else {
+      console.log(`🌤  No need to clear the CloudFront cache at this time.`);
+    }
   } catch (err) {
     throw err;
   }
