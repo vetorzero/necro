@@ -43,3 +43,11 @@ export async function createDistributionInvalidation(
   const duration = performance.now() - startTime;
   process.stdout.write(`Done! (${duration.toFixed(0)}ms)\n`);
 }
+
+export async function getDomainName(distributionId: string) {
+  const distribution = await cf
+    .getDistribution({ Id: distributionId })
+    .promise();
+
+  return distribution.Distribution?.DomainName;
+}

@@ -6,12 +6,15 @@ import {
   assertNotEmpty,
   getProjectBaseDirectory,
 } from "../utils/file";
-import { error, success } from "../utils/log";
+import { error, info, success } from "../utils/log";
 import { getConfig, ValidationError } from "../utils/config";
 import chalk from "chalk";
 import assert from "assert";
 import { sync } from "../lib/s3/sync";
-import { createDistributionInvalidation } from "../lib/s3/cloudfront";
+import {
+  createDistributionInvalidation,
+  getDomainName,
+} from "../lib/s3/cloudfront";
 
 /**
  * @todo set passwords only on html files
@@ -114,7 +117,8 @@ Configure necro by running ${cmd} in the root directory of your project.`);
     throw err;
   }
 
-  success("Demo successfully raised");
+  const domainName = await getDomainName(cfDistributionId);
+  info(`🔗 http://${domainName}/${targetDir}`);
 }
 
 /**
