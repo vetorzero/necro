@@ -1,10 +1,16 @@
+import chalk from "chalk";
 import { Command } from "commander";
-import inquirer from "inquirer";
-import { debug, error, info } from "../../utils/log";
-import YAML from "yaml";
-import os from "os";
 import { readFile, writeFile } from "fs/promises";
+import inquirer from "inquirer";
+import { kebabCase } from "lodash/fp";
+import YAML from "yaml";
 import { GLOBAL_CONFIG_FILE } from "../../utils/config";
+import { debug, info } from "../../utils/log";
+
+enum CredentialChoices {
+  SHARED,
+  KEY_PAIR,
+}
 
 /**
  * @todo add description
@@ -17,6 +23,9 @@ export default function config() {
 }
 
 async function action() {
+  let profileName = "";
+  let currentProfile: any = {};
+
   const currentConfigContent = await readFile(
     GLOBAL_CONFIG_FILE,
     "utf-8",
@@ -27,32 +36,41 @@ async function action() {
 
   const currentConfig = YAML.parse(currentConfigContent) || {};
 
-  debug({ currentConfig });
-  // process.exit();
+  const profiles = Object.keys(currentConfig?.profiles);
 
-  /** @todo check if it's the first profile */
-  const { shouldCreate } = await inquirer.prompt({
-    name: "shouldCreate",
-    message: "You don't have a profile set yet. Do you want to create one now?",
-    type: "confirm",
-  });
-
-  if (!shouldCreate) {
-    info("Config aborted");
-    return;
+  if (profiles.length) {
+    profileName = (
+      await inquirer.prompt({
+        name: "profileName",
+        message: "Which profile do you want to config?",
+        type: "list",
+        choices: [
+          { value: null, name: "Create a new profile" },
+          ...profiles.map((x) => ({ name: `Edit profile "${x}"`, value: x })),
+        ],
+      })
+    ).profileName;
   }
 
-  const { profileName } = await inquirer.prompt({
-    name: "profileName",
-    message: "How do you want to name this profile?",
-    default: "default",
-  });
+  if (profileName) {
+    currentProfile = currentConfig.profiles[profileName] ?? {};
+  } else {
+    profileName = (
+      await inquirer.prompt({
+        name: "profileName",
+        message: "What's the name of the profile?",
+        filter: kebabCase,
+        validate: (x: string) =>
+          x.trim().length < 1 ? "The profile name can't be empty" : true,
+      })
+    ).profileName;
+  }
+
+  debug(chalk.green(`\n  Configuring profile: ${chalk.bold(profileName)}`));
+
+  header("Credential options:");
 
   /** @todo only show this when aws cli is installed and configured */
-  enum CredentialChoices {
-    SHARED, //= "shared",
-    KEY_PAIR, // = "key/secret pair",
-  }
   const { credentialType } = await inquirer.prompt({
     name: "credentialType",
     message:
@@ -60,21 +78,54 @@ async function action() {
     type: "list",
     choices: [
       { value: CredentialChoices.SHARED, name: "Shared" },
-      { value: CredentialChoices.KEY_PAIR, name: "Key/secret pair" },
+      {
+        value: CredentialChoices.KEY_PAIR,
+        name: "Key/secret pair",
+      },
     ],
+    // @ts-ignore
+    default: currentProfile.credentials
+      ? CredentialChoices.KEY_PAIR
+      : CredentialChoices.SHARED,
   });
 
   const credentials =
     credentialType === CredentialChoices.KEY_PAIR
       ? await inquirer.prompt([
-          { name: "user-key", default: "USRKEY" },
-          { name: "user-secret", default: "USRSCRT" },
+          {
+            name: "user-key",
+            message: "User key",
+            default: currentProfile.credentials?.["user-key"],
+            validate: (x: string) =>
+              x.trim().length < 1 ? "The distribution id can't be empty" : true,
+          },
+          {
+            name: "user-secret",
+            message: "User secret",
+            default: currentProfile.credentials?.["user-secret"],
+            validate: (x: string) =>
+              x.trim().length < 1 ? "The distribution id can't be empty" : true,
+          },
         ])
       : undefined;
 
+  header("Hosting options:");
+
   const hosting = await inquirer.prompt([
-    { name: "s3-bucket", default: "my-bucket" },
-    { name: "cloudfront-distribution-id", default: "0000000000" },
+    {
+      name: "s3-bucket",
+      message: "S3 bucket",
+      default: currentProfile.hosting?.["s3-bucket"],
+      validate: (x: string) =>
+        x.trim().length < 1 ? "The bucket name can't be empty" : true,
+    },
+    {
+      name: "cloudfront-distribution-id",
+      message: "CloudFront distribution ID",
+      default: currentProfile.hosting?.["cloudfront-distribution-id"],
+      validate: (x: string) =>
+        x.trim().length < 1 ? "The distribution id can't be empty" : true,
+    },
   ]);
 
   /** @todo confirm override */
@@ -90,9 +141,10 @@ async function action() {
     },
   };
 
-  debug({ profileName, credentialType, credentials, hosting });
-  debug(YAML.stringify(newConfig));
-
   /** @todo deal with errors */
   await writeFile(GLOBAL_CONFIG_FILE, YAML.stringify(newConfig), "utf-8");
+}
+
+function header(str: string): void {
+  debug(`\n  ${str}\n`);
 }
