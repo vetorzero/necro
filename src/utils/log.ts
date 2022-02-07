@@ -16,6 +16,9 @@ export function debug(arg0: any, ...args: any[]) {
 export function error(arg0: any, ...args: any[]) {
   console.error(chalk.redBright(format(arg0, ...args)));
 }
+export function header(str: string): void {
+  debug(`\n  ${str}\n`);
+}
 
 const log = {
   success,
@@ -23,6 +26,7 @@ const log = {
   warn,
   debug,
   error,
+  header,
 };
 
 export default log;

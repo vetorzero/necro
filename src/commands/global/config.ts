@@ -1,78 +1,132 @@
-import chalk from "chalk";
 import { Command } from "commander";
+import { info } from "console";
 import { readFile, writeFile } from "fs/promises";
-import inquirer from "inquirer";
+import inquirer, { DistinctQuestion } from "inquirer";
 import { kebabCase } from "lodash/fp";
 import YAML from "yaml";
 import { GLOBAL_CONFIG_FILE } from "../../utils/config";
-import { debug, info } from "../../utils/log";
+import { header } from "../../utils/log";
 
 enum CredentialChoices {
   SHARED,
   KEY_PAIR,
 }
 
-/**
- * @todo add description
- */
+type AWSCredentials = {
+  user_key: string;
+  user_secret: string;
+};
+
+type AWSHosting = {
+  s3_bucket: string;
+  cloudfront_distribution_id: string;
+};
+
+type Profile = {
+  credentials?: AWSCredentials;
+  hosting: AWSHosting;
+};
+
+type GlobalConfig = {
+  defaultProfile?: string;
+  profiles?: Record<string, Profile>;
+};
+
 export default function config() {
   const cmd = new Command("config");
   cmd.action(action);
-
   return cmd;
 }
 
 async function action() {
-  let profileName = "";
-  let currentProfile: any = {};
+  // load config file contents
+  const [config, isNew] = await loadConfig();
+  if (!config.profiles) config.profiles = {};
 
-  const currentConfigContent = await readFile(
-    GLOBAL_CONFIG_FILE,
-    "utf-8",
-  ).catch((e) => {
-    debug(`Global config file not found or not readable`);
-    return "";
+  // select profile (if it exists)
+  const profileName: string = await askProfileName(
+    config.profiles ? Object.keys(config.profiles) : [],
+  );
+  const currentProfile: Profile = config?.profiles?.[profileName] ?? {
+    credentials: null,
+    hosting: { s3_bucket: "", cloudfront_distribution_id: "" },
+  };
+  config.profiles[profileName] = currentProfile;
+
+  // set credentials
+  header("Credential options:");
+  const currentCredentials = currentProfile?.credentials;
+  const credentials = await askCredentials(currentCredentials);
+  if (credentials) {
+    currentProfile.credentials = credentials;
+  } else {
+    delete currentProfile.credentials;
+  }
+
+  // set hosting
+  header("Hosting options:");
+  const currentHosting = currentProfile.hosting;
+  const hosting = await askHosting(currentHosting);
+  currentProfile.hosting = hosting;
+
+  await writeFile(GLOBAL_CONFIG_FILE, YAML.stringify(config), "utf-8");
+
+  info(`Global config saved to ${GLOBAL_CONFIG_FILE}.`);
+}
+
+async function loadConfig(): Promise<[config: GlobalConfig, isNew: boolean]> {
+  let isNew = false;
+
+  const config: GlobalConfig = await readFile(GLOBAL_CONFIG_FILE, "utf-8")
+    .then(YAML.parse)
+    .catch((err) => {
+      switch (err?.code) {
+        case "ENOENT":
+          // file not found
+          isNew = true;
+          return { profiles: {} };
+        default:
+          // file not readable
+          throw new Error(
+            `The global config file is not readable. (${GLOBAL_CONFIG_FILE})` +
+              `\nMake sure you are its owner and have read and write access (at least 0600) to it.`,
+          );
+      }
+    });
+
+  console.log("Current config", config);
+  console.log("Is new", isNew);
+
+  return [config, isNew];
+}
+
+async function askProfileName(profiles: string[]): Promise<string> {
+  const selectedProfile = await singlePrompt({
+    message: "Which profile do you want to config?",
+    type: "list",
+    choices: [
+      { value: null, name: "Create a new profile" },
+      ...profiles.map((x) => ({ name: `Edit profile "${x}"`, value: x })),
+    ],
   });
 
-  const currentConfig = YAML.parse(currentConfigContent) || {};
-
-  const profiles = Object.keys(currentConfig?.profiles);
-
-  if (profiles.length) {
-    profileName = (
-      await inquirer.prompt({
-        name: "profileName",
-        message: "Which profile do you want to config?",
-        type: "list",
-        choices: [
-          { value: null, name: "Create a new profile" },
-          ...profiles.map((x) => ({ name: `Edit profile "${x}"`, value: x })),
-        ],
-      })
-    ).profileName;
+  if (selectedProfile) {
+    return selectedProfile;
   }
 
-  if (profileName) {
-    currentProfile = currentConfig.profiles[profileName] ?? {};
-  } else {
-    profileName = (
-      await inquirer.prompt({
-        name: "profileName",
-        message: "What's the name of the profile?",
-        filter: kebabCase,
-        validate: (x: string) =>
-          x.trim().length < 1 ? "The profile name can't be empty" : true,
-      })
-    ).profileName;
-  }
+  return singlePrompt({
+    message: "What's the name of the profile?",
+    default: "default",
+    filter: kebabCase,
+    validate: (x: string) =>
+      x.trim().length < 1 ? "The profile name can't be empty" : true,
+  });
+}
 
-  debug(chalk.green(`\n  Configuring profile: ${chalk.bold(profileName)}`));
-
-  header("Credential options:");
-
-  /** @todo only show this when aws cli is installed and configured */
-  const { credentialType } = await inquirer.prompt({
-    name: "credentialType",
+async function askCredentials(
+  credentials?: Profile["credentials"],
+): Promise<AWSCredentials | undefined> {
+  const credentialType = await singlePrompt({
     message:
       "Do you want to use this machine's credentials or a custom key/secret pair?",
     type: "list",
@@ -83,68 +137,58 @@ async function action() {
         name: "Key/secret pair",
       },
     ],
-    // @ts-ignore
-    default: currentProfile.credentials
+    default: credentials
       ? CredentialChoices.KEY_PAIR
       : CredentialChoices.SHARED,
   });
 
-  const credentials =
-    credentialType === CredentialChoices.KEY_PAIR
-      ? await inquirer.prompt([
-          {
-            name: "user-key",
-            message: "User key",
-            default: currentProfile.credentials?.["user-key"],
-            validate: (x: string) =>
-              x.trim().length < 1 ? "The distribution id can't be empty" : true,
-          },
-          {
-            name: "user-secret",
-            message: "User secret",
-            default: currentProfile.credentials?.["user-secret"],
-            validate: (x: string) =>
-              x.trim().length < 1 ? "The distribution id can't be empty" : true,
-          },
-        ])
-      : undefined;
+  switch (credentialType) {
+    case CredentialChoices.SHARED:
+      return;
+    case CredentialChoices.KEY_PAIR:
+      return await inquirer.prompt([
+        {
+          name: "user_key",
+          message: "User key",
+          default: credentials?.["user_key"],
+          validate: (x: string) =>
+            x.trim().length < 1 ? "The user key can't be empty" : true,
+        },
+        {
+          name: "user_secret",
+          message: "User secret",
+          default: credentials?.["user_secret"],
+          validate: (x: string) =>
+            x.trim().length < 1 ? "The user secret can't be empty" : true,
+        },
+      ]);
+  }
+}
 
-  header("Hosting options:");
-
-  const hosting = await inquirer.prompt([
+async function askHosting<T extends Profile["hosting"]>(hosting?: T) {
+  return inquirer.prompt<T>([
     {
-      name: "s3-bucket",
+      name: "s3_bucket",
       message: "S3 bucket",
-      default: currentProfile.hosting?.["s3-bucket"],
+      default: hosting?.s3_bucket,
       validate: (x: string) =>
         x.trim().length < 1 ? "The bucket name can't be empty" : true,
     },
     {
-      name: "cloudfront-distribution-id",
+      name: "cloudfront_distribution_id",
       message: "CloudFront distribution ID",
-      default: currentProfile.hosting?.["cloudfront-distribution-id"],
+      default: hosting?.cloudfront_distribution_id,
       validate: (x: string) =>
         x.trim().length < 1 ? "The distribution id can't be empty" : true,
     },
   ]);
-
-  /** @todo confirm override */
-
-  const newConfig = {
-    ...currentConfig,
-    profiles: {
-      ...currentConfig.profiles,
-      [profileName]: {
-        credentials,
-        hosting,
-      },
-    },
-  };
-
-  /** @todo deal with errors */
-  await writeFile(GLOBAL_CONFIG_FILE, YAML.stringify(newConfig), "utf-8");
 }
 
-function header(str: string): void {
-  debug(`\n  ${str}\n`);
+async function singlePrompt(question: DistinctQuestion) {
+  const { answer } = await inquirer.prompt({
+    ...question,
+    name: "answer",
+  });
+
+  return answer;
 }
