@@ -71,7 +71,7 @@ async function action() {
 
   await writeFile(GLOBAL_CONFIG_FILE, YAML.stringify(config), "utf-8");
 
-  info(`Global config saved to ${GLOBAL_CONFIG_FILE}.`);
+  header(`Global config saved to ${GLOBAL_CONFIG_FILE}`);
 }
 
 async function loadConfig(): Promise<[config: GlobalConfig, isNew: boolean]> {
@@ -93,9 +93,6 @@ async function loadConfig(): Promise<[config: GlobalConfig, isNew: boolean]> {
           );
       }
     });
-
-  console.log("Current config", config);
-  console.log("Is new", isNew);
 
   return [config, isNew];
 }
