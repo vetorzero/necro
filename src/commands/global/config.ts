@@ -28,7 +28,7 @@ type Profile = {
 };
 
 type GlobalConfig = {
-  defaultProfile?: string;
+  default_profile?: string;
   profiles?: Record<string, Profile>;
 };
 
@@ -40,8 +40,9 @@ export default function config() {
 
 async function action() {
   // load config file contents
-  const [config, isNew] = await loadConfig();
+  const config = await loadConfig();
   if (!config.profiles) config.profiles = {};
+  const isNew = Object.keys(config.profiles).length < 1;
 
   // select profile (if it exists)
   const profileName: string = await askProfileName(
@@ -69,22 +70,30 @@ async function action() {
   const hosting = await askHosting(currentHosting);
   currentProfile.hosting = hosting;
 
+  // set default profile
+  if (config.default_profile !== profileName) {
+    const setDefault = await askSetDefault(profileName, isNew);
+    if (setDefault) {
+      config.default_profile = profileName;
+    }
+  }
+
   await writeFile(GLOBAL_CONFIG_FILE, YAML.stringify(config), "utf-8");
 
   header(`Global config saved to ${GLOBAL_CONFIG_FILE}`);
 }
 
-async function loadConfig(): Promise<[config: GlobalConfig, isNew: boolean]> {
-  let isNew = false;
-
+async function loadConfig(): Promise<GlobalConfig> {
   const config: GlobalConfig = await readFile(GLOBAL_CONFIG_FILE, "utf-8")
     .then(YAML.parse)
     .catch((err) => {
       switch (err?.code) {
         case "ENOENT":
           // file not found
-          isNew = true;
-          return { profiles: {} };
+          return {
+            default_profile: "",
+            profiles: {},
+          };
         default:
           // file not readable
           throw new Error(
@@ -94,7 +103,7 @@ async function loadConfig(): Promise<[config: GlobalConfig, isNew: boolean]> {
       }
     });
 
-  return [config, isNew];
+  return config;
 }
 
 async function askProfileName(profiles: string[]): Promise<string> {
@@ -179,6 +188,17 @@ async function askHosting<T extends Profile["hosting"]>(hosting?: T) {
         x.trim().length < 1 ? "The distribution id can't be empty" : true,
     },
   ]);
+}
+
+async function askSetDefault<T extends GlobalConfig["default_profile"]>(
+  profileName: T,
+  defaultValue: boolean,
+): Promise<boolean> {
+  return singlePrompt({
+    type: "confirm",
+    default: defaultValue,
+    message: `Set profile "${profileName}" as default?`,
+  });
 }
 
 async function singlePrompt(question: DistinctQuestion) {
