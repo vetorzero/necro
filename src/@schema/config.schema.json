@@ -1,22 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "AWSConfig": {
-      "additionalProperties": false,
-      "description": "The configs of the AWS account.",
-      "properties": {
-        "credentials": {
-          "$ref": "#/definitions/AWSCredentialsConfig"
-        },
-        "hosting": {
-          "$ref": "#/definitions/HostingConfig"
-        },
-        "region": {
-          "type": "string"
-        }
-      },
-      "type": "object"
-    },
     "AWSCredentials": {
       "additionalProperties": false,
       "properties": {
@@ -30,23 +14,6 @@
       "required": [
         "user_key",
         "user_secret"
-      ],
-      "type": "object"
-    },
-    "AWSCredentialsConfig": {
-      "additionalProperties": false,
-      "description": "Security credentials for AWS.",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "secret": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "id",
-        "secret"
       ],
       "type": "object"
     },
@@ -69,15 +36,11 @@
     "ConfigCommon": {
       "additionalProperties": false,
       "properties": {
-        "aws": {
-          "$ref": "#/definitions/Partial%3CAWSConfig%3E",
-          "description": "AWS Configuration."
-        },
         "client": {
           "description": "Who's the client that this demo will be sent to?",
           "type": "string"
         },
-        "distFolder": {
+        "dist_folder": {
           "description": "Where do the built files live?",
           "type": "string"
         },
@@ -93,7 +56,7 @@
       "required": [
         "client",
         "project",
-        "distFolder",
+        "dist_folder",
         "public"
       ],
       "type": "object"
@@ -102,15 +65,11 @@
       "additionalProperties": false,
       "description": "The configs for a private demo that requires username and password for authentication.",
       "properties": {
-        "aws": {
-          "$ref": "#/definitions/Partial%3CAWSConfig%3E",
-          "description": "AWS Configuration."
-        },
         "client": {
           "description": "Who's the client that this demo will be sent to?",
           "type": "string"
         },
-        "distFolder": {
+        "dist_folder": {
           "description": "Where do the built files live?",
           "type": "string"
         },
@@ -132,7 +91,7 @@
       },
       "required": [
         "client",
-        "distFolder",
+        "dist_folder",
         "password",
         "project",
         "public",
@@ -144,15 +103,11 @@
       "additionalProperties": false,
       "description": "The configs for a public demo.",
       "properties": {
-        "aws": {
-          "$ref": "#/definitions/Partial%3CAWSConfig%3E",
-          "description": "AWS Configuration."
-        },
         "client": {
           "description": "Who's the client that this demo will be sent to?",
           "type": "string"
         },
-        "distFolder": {
+        "dist_folder": {
           "description": "Where do the built files live?",
           "type": "string"
         },
@@ -168,7 +123,7 @@
       },
       "required": [
         "client",
-        "distFolder",
+        "dist_folder",
         "project",
         "public"
       ],
@@ -182,29 +137,12 @@
           "type": "string"
         },
         "profiles": {
-          "additionalProperties": {
+          "items": {
             "$ref": "#/definitions/Profile"
           },
-          "type": "object"
+          "type": "array"
         }
       },
-      "type": "object"
-    },
-    "HostingConfig": {
-      "additionalProperties": false,
-      "description": "The configs for the hosting services.",
-      "properties": {
-        "cfDistributionId": {
-          "type": "string"
-        },
-        "s3Bucket": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "s3Bucket",
-        "cfDistributionId"
-      ],
       "type": "object"
     },
     "NecroConfig": {
@@ -212,29 +150,31 @@
         {
           "additionalProperties": false,
           "properties": {
-            "aws": {
-              "$ref": "#/definitions/Partial%3CAWSConfig%3E",
-              "description": "AWS Configuration."
-            },
             "client": {
               "description": "Who's the client that this demo will be sent to?",
               "type": "string"
             },
+            "credentials": {
+              "$ref": "#/definitions/AWSCredentials"
+            },
             "default_profile": {
               "type": "string"
             },
-            "distFolder": {
+            "dist_folder": {
               "description": "Where do the built files live?",
               "type": "string"
+            },
+            "hosting": {
+              "$ref": "#/definitions/AWSHosting"
             },
             "password": {
               "type": "string"
             },
             "profiles": {
-              "additionalProperties": {
+              "items": {
                 "$ref": "#/definitions/Profile"
               },
-              "type": "object"
+              "type": "array"
             },
             "project": {
               "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
@@ -251,7 +191,7 @@
           },
           "required": [
             "client",
-            "distFolder",
+            "dist_folder",
             "password",
             "project",
             "public",
@@ -262,26 +202,28 @@
         {
           "additionalProperties": false,
           "properties": {
-            "aws": {
-              "$ref": "#/definitions/Partial%3CAWSConfig%3E",
-              "description": "AWS Configuration."
-            },
             "client": {
               "description": "Who's the client that this demo will be sent to?",
               "type": "string"
             },
+            "credentials": {
+              "$ref": "#/definitions/AWSCredentials"
+            },
             "default_profile": {
               "type": "string"
             },
-            "distFolder": {
+            "dist_folder": {
               "description": "Where do the built files live?",
               "type": "string"
             },
+            "hosting": {
+              "$ref": "#/definitions/AWSHosting"
+            },
             "profiles": {
-              "additionalProperties": {
+              "items": {
                 "$ref": "#/definitions/Profile"
               },
-              "type": "object"
+              "type": "array"
             },
             "project": {
               "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
@@ -295,28 +237,13 @@
           },
           "required": [
             "client",
-            "distFolder",
+            "dist_folder",
             "project",
             "public"
           ],
           "type": "object"
         }
       ]
-    },
-    "Partial<AWSConfig>": {
-      "additionalProperties": false,
-      "properties": {
-        "credentials": {
-          "$ref": "#/definitions/AWSCredentialsConfig"
-        },
-        "hosting": {
-          "$ref": "#/definitions/HostingConfig"
-        },
-        "region": {
-          "type": "string"
-        }
-      },
-      "type": "object"
     },
     "Profile": {
       "additionalProperties": false,
@@ -326,9 +253,13 @@
         },
         "hosting": {
           "$ref": "#/definitions/AWSHosting"
+        },
+        "name": {
+          "type": "string"
         }
       },
       "required": [
+        "name",
         "hosting"
       ],
       "type": "object"
@@ -336,10 +267,82 @@
     "ProjectConfig": {
       "anyOf": [
         {
-          "$ref": "#/definitions/ConfigPrivate"
+          "additionalProperties": false,
+          "properties": {
+            "client": {
+              "description": "Who's the client that this demo will be sent to?",
+              "type": "string"
+            },
+            "credentials": {
+              "$ref": "#/definitions/AWSCredentials"
+            },
+            "dist_folder": {
+              "description": "Where do the built files live?",
+              "type": "string"
+            },
+            "hosting": {
+              "$ref": "#/definitions/AWSHosting"
+            },
+            "password": {
+              "type": "string"
+            },
+            "project": {
+              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
+              "type": "string"
+            },
+            "public": {
+              "const": false,
+              "description": "Whether or not this demo will require a password.",
+              "type": "boolean"
+            },
+            "username": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "client",
+            "dist_folder",
+            "password",
+            "project",
+            "public",
+            "username"
+          ],
+          "type": "object"
         },
         {
-          "$ref": "#/definitions/ConfigPublic"
+          "additionalProperties": false,
+          "properties": {
+            "client": {
+              "description": "Who's the client that this demo will be sent to?",
+              "type": "string"
+            },
+            "credentials": {
+              "$ref": "#/definitions/AWSCredentials"
+            },
+            "dist_folder": {
+              "description": "Where do the built files live?",
+              "type": "string"
+            },
+            "hosting": {
+              "$ref": "#/definitions/AWSHosting"
+            },
+            "project": {
+              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
+              "type": "string"
+            },
+            "public": {
+              "const": true,
+              "description": "Whether or not this demo will require a password.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "client",
+            "dist_folder",
+            "project",
+            "public"
+          ],
+          "type": "object"
         }
       ],
       "description": "Project configutations that should be defined on `.necro`, at the root of the project."

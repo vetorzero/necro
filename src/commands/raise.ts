@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, program } from "commander";
 import { join } from "path";
 import {
   assertFileExists,
@@ -25,13 +25,17 @@ export default function raise() {
     .alias("publish")
     .description("Publish a new version of a demo.")
     .option(
-      "--version [number-or-name]",
+      "--version <number-or-name>",
       "The version of the demo. Defaults to the date and time of the invocation.",
     )
     .action(action);
 }
 
 async function action(command: Command) {
+  console.log(getConfig());
+
+  process.exit(12);
+
   let config;
   try {
     config = getConfig();

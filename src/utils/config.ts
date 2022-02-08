@@ -7,6 +7,8 @@ import { homedir } from "os";
 import yaml from "yaml";
 import { merge } from "lodash";
 import schema from "../@schema/config.schema.json";
+import { program } from "commander";
+import { profile } from "console";
 
 export const PROJECT_CONFIG_FILE = "necro.json";
 export const GLOBAL_CONFIG_FILE = join(homedir(), ".necrorc.yaml");
@@ -24,10 +26,15 @@ ajv.addSchema(schema);
 export class ValidationError extends Error {
   constructor(public errorsText: string) {
     super();
+    this.message = errorsText;
   }
 }
 
-function validateConfig<T>(definition: string, data: any): asserts data is T {
+function validateConfig<T>(
+  definition: string,
+  data: any,
+  dataVar: string = "",
+): asserts data is T {
   const validate = ajv.getSchema(definition);
   assert(validate, `Definition ${definition} not found in schema.`);
 
@@ -36,7 +43,7 @@ function validateConfig<T>(definition: string, data: any): asserts data is T {
     throw new ValidationError(
       ajv.errorsText(validate.errors, {
         separator: "\n",
-        dataVar: "data",
+        dataVar,
       }),
     );
   }
@@ -57,16 +64,38 @@ function validateProjectConfig<T extends ProjectConfig>(
 function validateGlobalConfig<T extends GlobalConfig>(
   data: any,
 ): asserts data is T {
-  validateConfig<T>("#/definitions/GlobalConfig", data);
+  validateConfig<T>("#/definitions/GlobalConfig", data, "global");
 }
 
 /**
  * Get the merged configs from the global (~/.necrorc.yaml) and the
  * project (ROOT/necro.yaml) config files.
+ *
+ * @todo make local config supersede global
+ * @todo bizarre errors when schema is slightly out of sync
  */
 export function getConfig(): NecroConfig {
-  /** @todo load global configs */
+  const globalConfigFile = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
+  const globalConfig = yaml.parse(globalConfigFile) ?? {};
+  validateGlobalConfig(globalConfig);
 
+  // select profile
+  const selectedProfileName: string | undefined =
+    program.opts()?.profile ?? globalConfig.default_profile;
+  assert(
+    selectedProfileName,
+    `Default profile not configured nor custom profile provided via command.\nRun "necro global config" to start using Necro.`,
+  );
+
+  const selectedProfile: Profile | undefined = globalConfig.profiles?.find(
+    (p) => p.name === selectedProfileName,
+  );
+  assert(
+    selectedProfile,
+    `Profile "${selectedProfileName}" does not exist in the global config.\nRun "necro global config" to start using Necro.`,
+  );
+
+  // load project config
   const baseDir = getProjectBaseDirectory();
   if (baseDir === null) {
     throw new Error(`Couldn't find a necro config file.`);
@@ -76,12 +105,12 @@ export function getConfig(): NecroConfig {
     join(baseDir, PROJECT_CONFIG_FILE),
     "utf-8",
   );
+
   const projectConfig = JSON.parse(projectConfigFile);
   validateProjectConfig(projectConfig);
 
-  const globalConfigFile = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
-  const globalConfig = yaml.parse(globalConfigFile) ?? {};
-  validateGlobalConfig(globalConfig);
+  // merge configs
+  const mergedConfigs = merge(selectedProfile, projectConfig);
 
-  return merge(globalConfig, projectConfig);
+  return mergedConfigs;
 }

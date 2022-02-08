@@ -13,17 +13,12 @@ type ConfigCommon = {
   /**
    * Where do the built files live?
    */
-  distFolder: string;
+  dist_folder: string;
 
   /**
    * Whether or not this demo will require a password.
    */
   public: boolean;
-
-  /**
-   * AWS Configuration.
-   */
-  aws?: Partial<AWSConfig>;
 };
 
 /**
@@ -44,35 +39,11 @@ type ConfigPublic = ConfigCommon & {
 };
 
 /**
- * The configs of the AWS account.
- */
-type AWSConfig = {
-  region?: string;
-  hosting?: HostingConfig;
-  credentials?: AWSCredentialsConfig;
-};
-
-/**
- * The configs for the hosting services.
- */
-type HostingConfig = {
-  s3Bucket: string;
-  cfDistributionId: string;
-};
-
-/**
- * Security credentials for AWS.
- */
-type AWSCredentialsConfig = {
-  id: string;
-  secret: string;
-};
-
-/**
  * Project configutations that should be defined on `.necro`,
  * at the root of the project.
  */
-type ProjectConfig = ConfigPrivate | ConfigPublic;
+type ProjectConfig = (ConfigPrivate | ConfigPublic) &
+  Partial<Omit<Profile, "name">>;
 
 type NecroConfig = GlobalConfig & ProjectConfig;
 
