@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
+import chalk from "chalk";
 import { program } from "commander";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { error } from "./src/utils/log";
+import { multilinePad } from "./src/utils/text";
 
 Error.stackTraceLimit = Infinity;
 
@@ -11,6 +13,10 @@ async function main() {
   program.storeOptionsAsProperties(false);
 
   program.option("--debug", "Show extended debug information.");
+  program.option(
+    "--profile <profile-name>",
+    "Use a specific profile from the global configuration.",
+  );
 
   // load commands
   const commandsDir = join(__dirname, "src/commands");
@@ -27,10 +33,14 @@ async function main() {
 }
 main().catch(mainError);
 
-function commandError(err: unknown): void {
+function commandError(err: Error | any): void {
   const { debug } = program.opts();
   if (!debug) {
-    error("\nRun your command again with --debug to see more details.");
+    error(
+      `\nError:\n` +
+        chalk.bold(multilinePad(err?.message ?? err)) +
+        "\n\nRun your command again with --debug to see more details.",
+    );
   } else {
     error("\n\n", err);
   }
