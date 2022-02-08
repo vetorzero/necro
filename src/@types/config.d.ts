@@ -74,11 +74,28 @@ type AWSCredentialsConfig = {
  */
 type ProjectConfig = ConfigPrivate | ConfigPublic;
 
+type NecroConfig = GlobalConfig & ProjectConfig;
+
+// --------------------------------------------------------
+//                     GLOBAL CONFIG
+
 /**
  * Global configurations that should be defined on `~/.necrorc.yaml`.
  */
 type GlobalConfig = {
-  aws?: AWSConfig;
+  default_profile?: string;
+  profiles?: Profile[];
 };
-
-type NecroConfig = GlobalConfig & ProjectConfig;
+type Profile = {
+  name: string;
+  credentials?: AWSCredentials;
+  hosting: AWSHosting;
+};
+type AWSCredentials = {
+  user_key: string;
+  user_secret: string;
+};
+type AWSHosting = {
+  s3_bucket: string;
+  cloudfront_distribution_id: string;
+};

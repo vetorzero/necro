@@ -17,6 +17,22 @@
       },
       "type": "object"
     },
+    "AWSCredentials": {
+      "additionalProperties": false,
+      "properties": {
+        "user_key": {
+          "type": "string"
+        },
+        "user_secret": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "user_key",
+        "user_secret"
+      ],
+      "type": "object"
+    },
     "AWSCredentialsConfig": {
       "additionalProperties": false,
       "description": "Security credentials for AWS.",
@@ -31,6 +47,22 @@
       "required": [
         "id",
         "secret"
+      ],
+      "type": "object"
+    },
+    "AWSHosting": {
+      "additionalProperties": false,
+      "properties": {
+        "cloudfront_distribution_id": {
+          "type": "string"
+        },
+        "s3_bucket": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "s3_bucket",
+        "cloudfront_distribution_id"
       ],
       "type": "object"
     },
@@ -146,8 +178,14 @@
       "additionalProperties": false,
       "description": "Global configurations that should be defined on `~/.necrorc.yaml`.",
       "properties": {
-        "aws": {
-          "$ref": "#/definitions/AWSConfig"
+        "default_profile": {
+          "type": "string"
+        },
+        "profiles": {
+          "additionalProperties": {
+            "$ref": "#/definitions/Profile"
+          },
+          "type": "object"
         }
       },
       "type": "object"
@@ -175,10 +213,14 @@
           "additionalProperties": false,
           "properties": {
             "aws": {
-              "$ref": "#/definitions/AWSConfig"
+              "$ref": "#/definitions/Partial%3CAWSConfig%3E",
+              "description": "AWS Configuration."
             },
             "client": {
               "description": "Who's the client that this demo will be sent to?",
+              "type": "string"
+            },
+            "default_profile": {
               "type": "string"
             },
             "distFolder": {
@@ -187,6 +229,12 @@
             },
             "password": {
               "type": "string"
+            },
+            "profiles": {
+              "additionalProperties": {
+                "$ref": "#/definitions/Profile"
+              },
+              "type": "object"
             },
             "project": {
               "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
@@ -215,15 +263,25 @@
           "additionalProperties": false,
           "properties": {
             "aws": {
-              "$ref": "#/definitions/AWSConfig"
+              "$ref": "#/definitions/Partial%3CAWSConfig%3E",
+              "description": "AWS Configuration."
             },
             "client": {
               "description": "Who's the client that this demo will be sent to?",
               "type": "string"
             },
+            "default_profile": {
+              "type": "string"
+            },
             "distFolder": {
               "description": "Where do the built files live?",
               "type": "string"
+            },
+            "profiles": {
+              "additionalProperties": {
+                "$ref": "#/definitions/Profile"
+              },
+              "type": "object"
             },
             "project": {
               "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
@@ -258,6 +316,21 @@
           "type": "string"
         }
       },
+      "type": "object"
+    },
+    "Profile": {
+      "additionalProperties": false,
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/AWSCredentials"
+        },
+        "hosting": {
+          "$ref": "#/definitions/AWSHosting"
+        }
+      },
+      "required": [
+        "hosting"
+      ],
       "type": "object"
     },
     "ProjectConfig": {

@@ -1,36 +1,17 @@
+import Ajv from "ajv";
 import { Command } from "commander";
-import { info } from "console";
 import { readFile, writeFile } from "fs/promises";
 import inquirer, { DistinctQuestion } from "inquirer";
-import { kebabCase } from "lodash/fp";
 import YAML from "yaml";
 import { GLOBAL_CONFIG_FILE } from "../../utils/config";
 import { header } from "../../utils/log";
+import schema from "../../@schema/config.schema.json";
+import assert from "assert";
 
 enum CredentialChoices {
   SHARED,
   KEY_PAIR,
 }
-
-type AWSCredentials = {
-  user_key: string;
-  user_secret: string;
-};
-
-type AWSHosting = {
-  s3_bucket: string;
-  cloudfront_distribution_id: string;
-};
-
-type Profile = {
-  credentials?: AWSCredentials;
-  hosting: AWSHosting;
-};
-
-type GlobalConfig = {
-  default_profile?: string;
-  profiles?: Record<string, Profile>;
-};
 
 export default function config() {
   const cmd = new Command("config");
@@ -39,23 +20,23 @@ export default function config() {
 }
 
 async function action() {
+  // await validateGlobalConfig();
+
   // load config file contents
   const config = await loadConfig();
-  if (!config.profiles) config.profiles = {};
-  const isNew = Object.keys(config.profiles).length < 1;
+  if (!config.profiles) config.profiles = [];
+  const isNew = !config.profiles.length;
 
   // select profile (if it exists)
-  const profileName: string = await askProfileName(
-    config.profiles ? Object.keys(config.profiles) : [],
-  );
-  const currentProfile: Profile = config?.profiles?.[profileName] ?? {
-    credentials: null,
-    hosting: { s3_bucket: "", cloudfront_distribution_id: "" },
-  };
-  config.profiles[profileName] = currentProfile;
+  const currentProfile = await askProfileName(config.profiles);
+  if (!config.profiles.find((p) => p.name === currentProfile.name)) {
+    console.log("add prof");
+    config.profiles.push(currentProfile);
+  }
 
   // set credentials
   header("Credential options:");
+  // console.log({ currentProfile });
   const currentCredentials = currentProfile?.credentials;
   const credentials = await askCredentials(currentCredentials);
   if (credentials) {
@@ -71,10 +52,10 @@ async function action() {
   currentProfile.hosting = hosting;
 
   // set default profile
-  if (config.default_profile !== profileName) {
-    const setDefault = await askSetDefault(profileName, isNew);
+  if (config.default_profile !== currentProfile.name) {
+    const setDefault = await askSetDefault(currentProfile.name, isNew);
     if (setDefault) {
-      config.default_profile = profileName;
+      config.default_profile = currentProfile.name;
     }
   }
 
@@ -106,13 +87,13 @@ async function loadConfig(): Promise<GlobalConfig> {
   return config;
 }
 
-async function askProfileName(profiles: string[]): Promise<string> {
+async function askProfileName(profiles: Profile[]): Promise<Profile> {
   const selectedProfile = await singlePrompt({
     message: "Which profile do you want to config?",
     type: "list",
     choices: [
       { value: null, name: "Create a new profile" },
-      ...profiles.map((x) => ({ name: `Edit profile "${x}"`, value: x })),
+      ...profiles.map((x) => ({ name: `Edit profile "${x.name}"`, value: x })),
     ],
   });
 
@@ -120,13 +101,17 @@ async function askProfileName(profiles: string[]): Promise<string> {
     return selectedProfile;
   }
 
-  return singlePrompt({
+  const name = await singlePrompt({
     message: "What's the name of the profile?",
     default: "default",
-    filter: kebabCase,
     validate: (x: string) =>
       x.trim().length < 1 ? "The profile name can't be empty" : true,
   });
+
+  return {
+    name,
+    hosting: { s3_bucket: "", cloudfront_distribution_id: "" },
+  };
 }
 
 async function askCredentials(
@@ -208,4 +193,33 @@ async function singlePrompt(question: DistinctQuestion) {
   });
 
   return answer;
+}
+
+async function validateGlobalConfig() {
+  const ajv = new Ajv({ allErrors: true, verbose: true });
+  ajv.addSchema(schema);
+
+  console.log(schema);
+
+  const validate = ajv.getSchema("#/definitions/GlobalConfig");
+  assert(validate);
+  const isValid = validate({ profiles: {} });
+  if (!isValid) {
+    console.log(
+      ajv.errorsText(validate.errors, {
+        separator: "\n",
+        dataVar: "",
+      }),
+    );
+  }
+  process.exit(0);
+
+  // const v = ajv.compile(schema);
+
+  // console.log("V", v({}), v.errors);
+
+  // const v = await ajv.validate(schema, {});
+  // console.log({ v });
+  // const s = ajv.getSchema("GlobalConfig");
+  // console.log({ ajv, schema });
 }
