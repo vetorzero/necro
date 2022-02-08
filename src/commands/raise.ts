@@ -32,36 +32,31 @@ export default function raise() {
 }
 
 async function action(command: Command) {
-  console.log(getConfig());
-
-  process.exit(12);
-
   let config;
   try {
     config = getConfig();
   } catch (err) {
     if (err instanceof ValidationError) {
-      error(`There was a problem validating your configuration. Check it out:
-${err.errorsText}`);
+      throw err;
     } else {
       const cmd = chalk.bold("necro init");
-      error(`Couldn't find a necro config file.
-Configure necro by running ${cmd} in the root directory of your project.`);
+      throw new Error(
+        `Couldn't find a necro config file.` +
+          `\nConfigure necro by running ${cmd} in the root directory of your project.`,
+      );
     }
-
-    throw err;
   }
 
   const version = encodeURIComponent(command.opts().version || createVersion());
   const baseDir = getProjectBaseDirectory()!;
-  const sourceDir = join(baseDir, config.distFolder);
+  const sourceDir = join(baseDir, config.dist_folder);
   const targetDir = `${config.client}/${config.project}/${version}`;
-  const bucket = config.aws?.hosting?.s3Bucket;
-  assert(bucket, "Bucket (config.aws.hosting.s3Bucket) is not defined.");
-  const cfDistributionId = config.aws?.hosting?.cfDistributionId;
+  const bucket = config.hosting?.s3_bucket;
+  assert(bucket, "Bucket (hosting.s3_bucket) is not defined.");
+  const cfDistributionId = config.hosting?.cloudfront_distribution_id;
   assert(
     cfDistributionId,
-    "CloudFront distribution ID (config.aws.hosting.cfDistributionId) is not defined.",
+    "CloudFront distribution ID (hosting.cloudfront_distribution_id) is not defined.",
   );
 
   try {
