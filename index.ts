@@ -20,10 +20,11 @@ async function main() {
 
   // load commands
   const commandsDir = join(__dirname, "src/commands");
-  const commandFiles = await readdir(commandsDir);
+  const commandFiles = await readdir(commandsDir, { withFileTypes: true });
   await Promise.all(
-    commandFiles.map(async (file) => {
-      const path = join(commandsDir, file);
+    commandFiles.map(async file => {
+      if (!file.isFile()) return; // skip dirs
+      const path = join(commandsDir, file.name);
       const { default: command } = await import(path);
       program.addCommand(command());
     }),
