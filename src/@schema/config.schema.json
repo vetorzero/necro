@@ -90,7 +90,6 @@
         }
       },
       "required": [
-        "name",
         "hosting"
       ],
       "type": "object"

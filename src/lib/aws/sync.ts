@@ -7,6 +7,7 @@ import { join } from "path";
 import { performance } from "perf_hooks";
 import { fileMd5 } from "../../utils/crypto";
 import mime from "mime-types";
+import { getConfig } from "../../utils/config";
 
 type FileRow = {
   path: string;
@@ -14,10 +15,19 @@ type FileRow = {
   isDir?: boolean;
 };
 
-AWS.config.credentials = new AWS.SharedIniFileCredentials();
-AWS.config.region = "sa-east-1";
-
-const s3 = new AWS.S3();
+const s3Promise = getConfig().then(
+  config =>
+    new AWS.S3(
+      config.profile.credentials
+        ? {
+            credentials: {
+              accessKeyId: config.profile.credentials.user_key,
+              secretAccessKey: config.profile.credentials.user_secret,
+            },
+          }
+        : { credentials: new AWS.SharedIniFileCredentials() },
+    ),
+);
 
 /**
  * @returns A list of the modified file paths.
@@ -43,6 +53,8 @@ export async function sync(
 }
 
 async function listRemoteFiles(bucket: string, targetDir: string): Promise<FileRow[]> {
+  const s3 = await s3Promise;
+
   const files: FileRow[] = [];
   let response: AWS.S3.ListObjectsV2Output | null = null;
   do {
@@ -91,6 +103,8 @@ async function listLocalFiles(sourceDir: string): Promise<FileRow[]> {
 }
 
 async function deleteFiles(bucket: string, targetDir: string, files: FileRow[]): Promise<void> {
+  const s3 = await s3Promise;
+
   for (const f of files) {
     const startTime = performance.now();
     process.stdout.write(chalk.red(`❌ ${f.path}... `));
@@ -114,6 +128,8 @@ async function uploadFiles(
   files: FileRow[],
   meta: Record<string, string>,
 ): Promise<void> {
+  const s3 = await s3Promise;
+
   for (const f of files) {
     const startTime = performance.now();
     process.stdout.write(chalk.green(`✅ ${f.path}... `));

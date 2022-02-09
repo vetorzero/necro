@@ -1,8 +1,8 @@
 import { Command } from "commander";
 import { format } from "date-fns";
 import { join } from "path";
-import { createDistributionInvalidation, getDomainName } from "../lib/s3/cloudfront";
-import { sync } from "../lib/s3/sync";
+import { createDistributionInvalidation, getDomainName } from "../lib/aws/cloudfront";
+import { sync } from "../lib/aws/sync";
 import { getConfig } from "../utils/config";
 import {
   assertFileExists,
