@@ -1,10 +1,9 @@
-import assert from "assert";
-import chalk from "chalk";
 import { Command } from "commander";
+import { format } from "date-fns";
 import { join } from "path";
 import { createDistributionInvalidation, getDomainName } from "../lib/s3/cloudfront";
 import { sync } from "../lib/s3/sync";
-import { getConfig, ValidationError } from "../utils/config";
+import { getConfig } from "../utils/config";
 import {
   assertFileExists,
   assertIsDir,
@@ -36,13 +35,8 @@ async function action(command: Command) {
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.dist_folder);
   const targetDir = `${config.client}/${config.project}/${version}`;
-  const bucket = config.hosting?.s3_bucket;
-  assert(bucket, "Bucket (hosting.s3_bucket) is not defined.");
-  const cfDistributionId = config.hosting?.cloudfront_distribution_id;
-  assert(
-    cfDistributionId,
-    "CloudFront distribution ID (hosting.cloudfront_distribution_id) is not defined.",
-  );
+  const bucket = config.profile.hosting.s3_bucket;
+  const cfDistributionId = config.profile.hosting.cloudfront_distribution_id;
 
   try {
     assertFileExists(sourceDir);
@@ -75,9 +69,9 @@ async function action(command: Command) {
   }
 
   const options: Record<string, string> = {};
-  if (!config.public) {
+  if (config.auth) {
     options["auth"] =
-      encodeURIComponent(config.username) + ":" + encodeURIComponent(config.password);
+      encodeURIComponent(config.auth.username) + ":" + encodeURIComponent(config.auth.password);
   }
 
   const [createdFiles, deletedFiles] = await sync(sourceDir, targetDir, bucket, options);
@@ -86,7 +80,7 @@ async function action(command: Command) {
     if (deletedFiles.length) {
       await createDistributionInvalidation(cfDistributionId, targetDir);
     } else {
-      console.log(`🌤  No need to clear the CloudFront cache at this time.`);
+      info(`🌤  No need to clear CloudFront cache at this time.`);
     }
   } catch (err) {
     throw err;
@@ -100,6 +94,5 @@ async function action(command: Command) {
  * Get the current date as YYYY-MM-DD.
  */
 function createVersion(): string {
-  const now = new Date();
-  return now.toISOString().split("T")[0];
+  return format(Date.now(), "yyyy-MM-dd");
 }

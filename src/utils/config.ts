@@ -1,7 +1,7 @@
 import Ajv, { ValidateFunction } from "ajv";
 import assert from "assert";
+import chalk from "chalk";
 import { program } from "commander";
-import { info } from "console";
 import { PathLike } from "fs";
 import { readFile } from "fs/promises";
 import { homedir } from "os";
@@ -9,6 +9,7 @@ import { join } from "path";
 import YAML from "yaml";
 import schema from "../@schema/config.schema.json";
 import { getProjectBaseDirectory } from "./file";
+import { info } from "./log";
 
 export const PROJECT_CONFIG_FILE = "necro.yaml";
 export const GLOBAL_CONFIG_FILE = join(homedir(), ".necrorc.yaml");
@@ -61,12 +62,12 @@ export async function getConfig(): Promise<Config.MergedConfig> {
   // merge configs
   const config = { ...projectConfig };
   if (program.opts()?.profile && profile) {
-    info("Forced profile");
+    info(`👷 Using profile ${chalk.bold(profileName)} from CLI.`);
     config.profile = profile;
   } else if (projectConfig.profile) {
-    info("Profile from project");
+    info(`👷 Using profile from project.`);
   } else if (profile !== undefined) {
-    info("Default profile from global");
+    info(`👷 Using profile ${chalk.bold(profileName)} from global config file.`);
     config.profile = profile;
   } else {
     throw new Error(

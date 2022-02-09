@@ -28,32 +28,21 @@ export async function sync(
   bucket: string,
   meta: Record<string, string> = {},
 ): Promise<[uploaded: FileRow[], deleted: FileRow[]]> {
-  const targetDirWithSlash = targetDir.endsWith("/")
-    ? targetDir
-    : targetDir + "/";
+  const targetDirWithSlash = targetDir.endsWith("/") ? targetDir : targetDir + "/";
 
-  const remoteFiles = _.sortBy(
-    await listRemoteFiles(bucket, targetDirWithSlash),
-    "path",
-  );
+  const remoteFiles = _.sortBy(await listRemoteFiles(bucket, targetDirWithSlash), "path");
   const localFiles = _.sortBy(await listLocalFiles(sourceDir), "path");
 
   const filesToDelete = _.differenceWith(remoteFiles, localFiles, _.isEqual);
   const filesToUpload = _.differenceWith(localFiles, remoteFiles, _.isEqual);
 
   await deleteFiles(bucket, targetDirWithSlash, filesToDelete);
-  await uploadFiles(bucket, sourceDir, targetDirWithSlash, filesToUpload);
+  await uploadFiles(bucket, sourceDir, targetDirWithSlash, filesToUpload, meta);
 
   return [filesToUpload, filesToDelete];
-
-  // @todo sync dirs (dont ignore on fetch; add on local glob)
-  // @todo meta
 }
 
-async function listRemoteFiles(
-  bucket: string,
-  targetDir: string,
-): Promise<FileRow[]> {
+async function listRemoteFiles(bucket: string, targetDir: string): Promise<FileRow[]> {
   const files: FileRow[] = [];
   let response: AWS.S3.ListObjectsV2Output | null = null;
   do {
@@ -63,13 +52,11 @@ async function listRemoteFiles(
         Prefix: targetDir,
         MaxKeys: 10,
         ContinuationToken:
-          response && response.NextContinuationToken
-            ? response.NextContinuationToken
-            : undefined,
+          response && response.NextContinuationToken ? response.NextContinuationToken : undefined,
       })
       .promise();
 
-    response.Contents?.forEach((f) => {
+    response.Contents?.forEach(f => {
       let isDir = false;
 
       // if it's a dir. bail out (for now).
@@ -91,7 +78,7 @@ async function listLocalFiles(sourceDir: string): Promise<FileRow[]> {
 
   const ls = await fg("**/*", { dot: true, cwd: sourceDir });
   await Promise.all(
-    ls.map(async (path) => {
+    ls.map(async path => {
       files.push({
         path,
         md5: await fileMd5(join(sourceDir, path)),
@@ -103,11 +90,7 @@ async function listLocalFiles(sourceDir: string): Promise<FileRow[]> {
   return files;
 }
 
-async function deleteFiles(
-  bucket: string,
-  targetDir: string,
-  files: FileRow[],
-): Promise<void> {
+async function deleteFiles(bucket: string, targetDir: string, files: FileRow[]): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
     process.stdout.write(chalk.red(`❌ ${f.path}... `));
@@ -129,10 +112,18 @@ async function uploadFiles(
   sourceDir: string,
   targetDir: string,
   files: FileRow[],
+  meta: Record<string, string>,
 ): Promise<void> {
   for (const f of files) {
     const startTime = performance.now();
     process.stdout.write(chalk.green(`✅ ${f.path}... `));
+
+    // don't apply security on non-html files
+    // (mainly due to problems with web-ar)
+    const Metadata = { ...meta };
+    if (!f.path.match(/\.html?$/)) {
+      delete Metadata.auth;
+    }
 
     const sourceFilePath = join(sourceDir, f.path);
     const stream = createReadStream(sourceFilePath);
@@ -142,6 +133,7 @@ async function uploadFiles(
         Key: join(targetDir, f.path),
         Body: stream,
         ContentType: mime.lookup(sourceFilePath) || "application/octet-stream",
+        Metadata,
       })
       .promise();
 

@@ -9,10 +9,7 @@ const cf = new AWS.CloudFront();
 /**
  * @todo invalidate only deleted files
  */
-export async function createDistributionInvalidation(
-  distributionId: string,
-  prefix: string,
-) {
+export async function createDistributionInvalidation(distributionId: string, prefix: string) {
   const startTime = performance.now();
   process.stdout.write(`☁️  Invalidating Cloudfront cache... `);
 
@@ -47,8 +44,5 @@ export async function createDistributionInvalidation(
 export async function getDomainName(distributionId: string) {
   const res = await cf.getDistribution({ Id: distributionId }).promise();
 
-  return (
-    res.Distribution?.DistributionConfig.Aliases?.Items?.[0] ||
-    res.Distribution?.DomainName
-  );
+  return res.Distribution?.DistributionConfig.Aliases?.Items?.[0] || res.Distribution?.DomainName;
 }
