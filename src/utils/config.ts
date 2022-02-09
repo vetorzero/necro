@@ -1,16 +1,16 @@
-import { getProjectBaseDirectory } from "./file";
-import { readFileSync } from "fs";
-import { join } from "path";
-import Ajv from "ajv";
+import Ajv, { ValidateFunction } from "ajv";
 import assert from "assert";
-import { homedir } from "os";
-import yaml from "yaml";
-import { merge } from "lodash";
-import schema from "../@schema/config.schema.json";
 import { program } from "commander";
-import { profile } from "console";
+import { info } from "console";
+import { PathLike } from "fs";
+import { readFile } from "fs/promises";
+import { homedir } from "os";
+import { join } from "path";
+import YAML from "yaml";
+import schema from "../@schema/config.schema.json";
+import { getProjectBaseDirectory } from "./file";
 
-export const PROJECT_CONFIG_FILE = "necro.json";
+export const PROJECT_CONFIG_FILE = "necro.yaml";
 export const GLOBAL_CONFIG_FILE = join(homedir(), ".necrorc.yaml");
 
 // create schema validator
@@ -23,94 +23,102 @@ assert(
 );
 ajv.addSchema(schema);
 
-export class ValidationError extends Error {
-  constructor(public errorsText: string) {
-    super();
-    this.message = errorsText;
+/**
+ * Get the merged configs from the global (~/.necrorc.yaml) and the
+ * project (ROOT/necro.yaml) config files.
+ *
+ * Config priority:
+ *  - --profile option
+ *  - project config
+ *  - global config with default profile
+ *
+ * @todo bizarre errors when schema is slightly out of sync
+ */
+export async function getConfig(): Promise<Config.MergedConfig> {
+  // find the project's root dir
+  const baseDir = getProjectBaseDirectory();
+  assert(baseDir, `Couldn't find a necro config file.`);
+
+  // load project config
+  const projectConfig = (await loadYaml<ProjectConfig>(
+    join(baseDir, PROJECT_CONFIG_FILE),
+    "#/definitions/ProjectConfig",
+  )) as ProjectConfig;
+
+  // load global config
+  const globalConfig = await loadYaml<GlobalConfig>(
+    GLOBAL_CONFIG_FILE,
+    "#/definitions/GlobalConfig",
+  );
+
+  // select profile
+  const profileName = program.opts()?.profile ?? globalConfig?.default_profile;
+  const profile = globalConfig?.profiles?.find(p => p.name === profileName);
+  if (profileName) {
+    assert(profile, `Profile "${profileName}" doesn't exist.`);
   }
+
+  // merge configs
+  const config = { ...projectConfig };
+  if (program.opts()?.profile && profile) {
+    info("Forced profile");
+    config.profile = profile;
+  } else if (projectConfig.profile) {
+    info("Profile from project");
+  } else if (profile !== undefined) {
+    info("Default profile from global");
+    config.profile = profile;
+  } else {
+    throw new Error(
+      `Can't find a profile for publishing.` +
+        `\nRun "necro global config" to create a global profile` +
+        `\nor add a "profile" property to the project configuration.`,
+    );
+  }
+
+  return config as Config.MergedConfig;
 }
 
-function validateConfig<T>(
-  definition: string,
-  data: any,
-  dataVar: string = "",
-): asserts data is T {
-  const validate = ajv.getSchema(definition);
-  assert(validate, `Definition ${definition} not found in schema.`);
+async function loadYaml<T>(path: PathLike, schema: string): Promise<T | null> {
+  const contents = await readFile(path, "utf-8").catch(err => {
+    switch (err?.code) {
+      case "ENOENT":
+        return null;
+      default:
+        // file not readable
+        throw new Error(
+          `The config file ${path} is not readable.` +
+            `\nMake sure you are its owner and have read and write access (at least 0600) to it.`,
+        );
+    }
+  });
+  if (contents === null) return null;
 
+  const parsed = YAML.parse(contents); // @todo check for errors
+
+  const validator = ajv.getSchema(schema);
+  assert(validator, `Schema ${schema} doens't exist.`);
+
+  validateConfig<T>(validator, parsed);
+
+  return parsed;
+}
+
+function validateConfig<T>(validate: ValidateFunction, data: any): asserts data is T {
   const isValid = validate(data);
   if (!isValid) {
     throw new ValidationError(
       ajv.errorsText(validate.errors, {
         separator: "\n",
-        dataVar,
+        dataVar: "config",
       }),
     );
   }
 }
 
-/**
- * Check if the local config is valid.
- */
-function validateProjectConfig<T extends ProjectConfig>(
-  data: any,
-): asserts data is T {
-  validateConfig<T>("#/definitions/ProjectConfig", data);
-}
-
-/**
- * Check if the global config is valid.
- */
-function validateGlobalConfig<T extends GlobalConfig>(
-  data: any,
-): asserts data is T {
-  validateConfig<T>("#/definitions/GlobalConfig", data, "global");
-}
-
-/**
- * Get the merged configs from the global (~/.necrorc.yaml) and the
- * project (ROOT/necro.yaml) config files.
- *
- * @todo make local config supersede global
- * @todo bizarre errors when schema is slightly out of sync
- */
-export function getConfig(): NecroConfig {
-  const globalConfigFile = readFileSync(GLOBAL_CONFIG_FILE, "utf-8");
-  const globalConfig = yaml.parse(globalConfigFile) ?? {};
-  validateGlobalConfig(globalConfig);
-
-  // select profile
-  const selectedProfileName: string | undefined =
-    program.opts()?.profile ?? globalConfig.default_profile;
-  assert(
-    selectedProfileName,
-    `Default profile not configured nor custom profile provided via command.\nRun "necro global config" to start using Necro.`,
-  );
-
-  const selectedProfile: Profile | undefined = globalConfig.profiles?.find(
-    (p) => p.name === selectedProfileName,
-  );
-  assert(
-    selectedProfile,
-    `Profile "${selectedProfileName}" does not exist in the global config.\nRun "necro global config" to start using Necro.`,
-  );
-
-  // load project config
-  const baseDir = getProjectBaseDirectory();
-  if (baseDir === null) {
-    throw new Error(`Couldn't find a necro config file.`);
+export class ValidationError extends Error {
+  constructor(public errorsText: string) {
+    super();
+    this.message = errorsText;
   }
-
-  const projectConfigFile = readFileSync(
-    join(baseDir, PROJECT_CONFIG_FILE),
-    "utf-8",
-  );
-
-  const projectConfig = JSON.parse(projectConfigFile);
-  validateProjectConfig(projectConfig);
-
-  // merge configs
-  const mergedConfigs = merge(selectedProfile, projectConfig);
-
-  return mergedConfigs;
 }

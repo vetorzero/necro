@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "AWSCredentials": {
-      "additionalProperties": false,
       "properties": {
         "user_key": {
           "type": "string"
@@ -18,7 +17,6 @@
       "type": "object"
     },
     "AWSHosting": {
-      "additionalProperties": false,
       "properties": {
         "cloudfront_distribution_id": {
           "type": "string"
@@ -33,228 +31,61 @@
       ],
       "type": "object"
     },
-    "ConfigCommon": {
-      "additionalProperties": false,
+    "Config.Auth": {
       "properties": {
-        "client": {
-          "description": "Who's the client that this demo will be sent to?",
-          "type": "string"
-        },
-        "dist_folder": {
-          "description": "Where do the built files live?",
-          "type": "string"
-        },
-        "project": {
-          "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-          "type": "string"
-        },
-        "public": {
-          "description": "Whether or not this demo will require a password.",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "client",
-        "project",
-        "dist_folder",
-        "public"
-      ],
-      "type": "object"
-    },
-    "ConfigPrivate": {
-      "additionalProperties": false,
-      "description": "The configs for a private demo that requires username and password for authentication.",
-      "properties": {
-        "client": {
-          "description": "Who's the client that this demo will be sent to?",
-          "type": "string"
-        },
-        "dist_folder": {
-          "description": "Where do the built files live?",
-          "type": "string"
-        },
         "password": {
+          "description": "A password for client authentication",
           "type": "string"
-        },
-        "project": {
-          "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-          "type": "string"
-        },
-        "public": {
-          "const": false,
-          "description": "Whether or not this demo will require a password.",
-          "type": "boolean"
         },
         "username": {
+          "description": "A username for the client authentication",
           "type": "string"
         }
       },
       "required": [
-        "client",
-        "dist_folder",
-        "password",
-        "project",
-        "public",
-        "username"
+        "username",
+        "password"
       ],
       "type": "object"
     },
-    "ConfigPublic": {
-      "additionalProperties": false,
-      "description": "The configs for a public demo.",
+    "Config.MergedConfig": {
       "properties": {
+        "auth": {
+          "$ref": "#/definitions/Config.Auth"
+        },
         "client": {
-          "description": "Who's the client that this demo will be sent to?",
           "type": "string"
         },
         "dist_folder": {
-          "description": "Where do the built files live?",
           "type": "string"
+        },
+        "profile": {
+          "$ref": "#/definitions/Config.Profile"
         },
         "project": {
-          "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
           "type": "string"
-        },
-        "public": {
-          "const": true,
-          "description": "Whether or not this demo will require a password.",
-          "type": "boolean"
         }
       },
       "required": [
         "client",
         "dist_folder",
-        "project",
-        "public"
+        "profile",
+        "project"
       ],
       "type": "object"
     },
-    "GlobalConfig": {
-      "additionalProperties": false,
-      "description": "Global configurations that should be defined on `~/.necrorc.yaml`.",
-      "properties": {
-        "default_profile": {
-          "type": "string"
-        },
-        "profiles": {
-          "items": {
-            "$ref": "#/definitions/Profile"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "NecroConfig": {
-      "anyOf": [
-        {
-          "additionalProperties": false,
-          "properties": {
-            "client": {
-              "description": "Who's the client that this demo will be sent to?",
-              "type": "string"
-            },
-            "credentials": {
-              "$ref": "#/definitions/AWSCredentials"
-            },
-            "default_profile": {
-              "type": "string"
-            },
-            "dist_folder": {
-              "description": "Where do the built files live?",
-              "type": "string"
-            },
-            "hosting": {
-              "$ref": "#/definitions/AWSHosting"
-            },
-            "password": {
-              "type": "string"
-            },
-            "profiles": {
-              "items": {
-                "$ref": "#/definitions/Profile"
-              },
-              "type": "array"
-            },
-            "project": {
-              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-              "type": "string"
-            },
-            "public": {
-              "const": false,
-              "description": "Whether or not this demo will require a password.",
-              "type": "boolean"
-            },
-            "username": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "client",
-            "dist_folder",
-            "password",
-            "project",
-            "public",
-            "username"
-          ],
-          "type": "object"
-        },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "client": {
-              "description": "Who's the client that this demo will be sent to?",
-              "type": "string"
-            },
-            "credentials": {
-              "$ref": "#/definitions/AWSCredentials"
-            },
-            "default_profile": {
-              "type": "string"
-            },
-            "dist_folder": {
-              "description": "Where do the built files live?",
-              "type": "string"
-            },
-            "hosting": {
-              "$ref": "#/definitions/AWSHosting"
-            },
-            "profiles": {
-              "items": {
-                "$ref": "#/definitions/Profile"
-              },
-              "type": "array"
-            },
-            "project": {
-              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-              "type": "string"
-            },
-            "public": {
-              "const": true,
-              "description": "Whether or not this demo will require a password.",
-              "type": "boolean"
-            }
-          },
-          "required": [
-            "client",
-            "dist_folder",
-            "project",
-            "public"
-          ],
-          "type": "object"
-        }
-      ]
-    },
-    "Profile": {
-      "additionalProperties": false,
+    "Config.Profile": {
       "properties": {
         "credentials": {
-          "$ref": "#/definitions/AWSCredentials"
+          "$ref": "#/definitions/AWSCredentials",
+          "description": "The identification of a AWS user. Leave it empty to use the current credentials configured via the AWS CLI."
         },
         "hosting": {
-          "$ref": "#/definitions/AWSHosting"
+          "$ref": "#/definitions/AWSHosting",
+          "description": "The AWS resources used to serve this demo."
         },
         "name": {
+          "description": "And identifier for the profile when using the global config.",
           "type": "string"
         }
       },
@@ -264,88 +95,45 @@
       ],
       "type": "object"
     },
-    "ProjectConfig": {
-      "anyOf": [
-        {
-          "additionalProperties": false,
-          "properties": {
-            "client": {
-              "description": "Who's the client that this demo will be sent to?",
-              "type": "string"
-            },
-            "credentials": {
-              "$ref": "#/definitions/AWSCredentials"
-            },
-            "dist_folder": {
-              "description": "Where do the built files live?",
-              "type": "string"
-            },
-            "hosting": {
-              "$ref": "#/definitions/AWSHosting"
-            },
-            "password": {
-              "type": "string"
-            },
-            "project": {
-              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-              "type": "string"
-            },
-            "public": {
-              "const": false,
-              "description": "Whether or not this demo will require a password.",
-              "type": "boolean"
-            },
-            "username": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "client",
-            "dist_folder",
-            "password",
-            "project",
-            "public",
-            "username"
-          ],
-          "type": "object"
+    "GlobalConfig": {
+      "description": "Global configurations that should be defined on `~/.necrorc.yaml`.",
+      "properties": {
+        "default_profile": {
+          "type": "string"
         },
-        {
-          "additionalProperties": false,
-          "properties": {
-            "client": {
-              "description": "Who's the client that this demo will be sent to?",
-              "type": "string"
-            },
-            "credentials": {
-              "$ref": "#/definitions/AWSCredentials"
-            },
-            "dist_folder": {
-              "description": "Where do the built files live?",
-              "type": "string"
-            },
-            "hosting": {
-              "$ref": "#/definitions/AWSHosting"
-            },
-            "project": {
-              "description": "The codename of the project. (usually the same as the git repos) Avoid using names that are too specific, as they tend to change a lot.",
-              "type": "string"
-            },
-            "public": {
-              "const": true,
-              "description": "Whether or not this demo will require a password.",
-              "type": "boolean"
-            }
+        "profiles": {
+          "items": {
+            "$ref": "#/definitions/Config.Profile"
           },
-          "required": [
-            "client",
-            "dist_folder",
-            "project",
-            "public"
-          ],
-          "type": "object"
+          "type": "array"
         }
+      },
+      "type": "object"
+    },
+    "ProjectConfig": {
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/Config.Auth"
+        },
+        "client": {
+          "type": "string"
+        },
+        "dist_folder": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/definitions/Config.Profile"
+        },
+        "project": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "client",
+        "project",
+        "dist_folder"
       ],
-      "description": "Project configutations that should be defined on `.necro`, at the root of the project."
+      "type": "object"
     }
   }
 }

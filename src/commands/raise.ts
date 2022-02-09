@@ -1,20 +1,17 @@
-import { Command, program } from "commander";
+import assert from "assert";
+import chalk from "chalk";
+import { Command } from "commander";
 import { join } from "path";
+import { createDistributionInvalidation, getDomainName } from "../lib/s3/cloudfront";
+import { sync } from "../lib/s3/sync";
+import { getConfig, ValidationError } from "../utils/config";
 import {
   assertFileExists,
   assertIsDir,
   assertNotEmpty,
   getProjectBaseDirectory,
 } from "../utils/file";
-import { error, info, success } from "../utils/log";
-import { getConfig, ValidationError } from "../utils/config";
-import chalk from "chalk";
-import assert from "assert";
-import { sync } from "../lib/s3/sync";
-import {
-  createDistributionInvalidation,
-  getDomainName,
-} from "../lib/s3/cloudfront";
+import { error, info } from "../utils/log";
 
 /**
  * @todo set passwords only on html files
@@ -33,19 +30,7 @@ export default function raise() {
 
 async function action(command: Command) {
   let config;
-  try {
-    config = getConfig();
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      throw err;
-    } else {
-      const cmd = chalk.bold("necro init");
-      throw new Error(
-        `Couldn't find a necro config file.` +
-          `\nConfigure necro by running ${cmd} in the root directory of your project.`,
-      );
-    }
-  }
+  config = await getConfig();
 
   const version = encodeURIComponent(command.opts().version || createVersion());
   const baseDir = getProjectBaseDirectory()!;
@@ -64,7 +49,7 @@ async function action(command: Command) {
   } catch (err) {
     error(
       `Source dir "${sourceDir}" doesn't exist.\n` +
-        `You should provide a valid path relative to the necro.json config file.`,
+        `You should provide a valid path relative to the "necro.yaml" config file.`,
     );
     throw err;
   }
@@ -74,7 +59,7 @@ async function action(command: Command) {
   } catch (err) {
     error(
       `Source folder "${sourceDir}" is… well… not a folder.\n` +
-        `You should provide a valid path relative to the necro.json config file.`,
+        `You should provide a valid path relative to the "necro.yaml" config file.`,
     );
     throw err;
   }
@@ -92,17 +77,10 @@ async function action(command: Command) {
   const options: Record<string, string> = {};
   if (!config.public) {
     options["auth"] =
-      encodeURIComponent(config.username) +
-      ":" +
-      encodeURIComponent(config.password);
+      encodeURIComponent(config.username) + ":" + encodeURIComponent(config.password);
   }
 
-  const [createdFiles, deletedFiles] = await sync(
-    sourceDir,
-    targetDir,
-    bucket,
-    options,
-  );
+  const [createdFiles, deletedFiles] = await sync(sourceDir, targetDir, bucket, options);
 
   try {
     if (deletedFiles.length) {
