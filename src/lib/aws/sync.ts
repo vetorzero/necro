@@ -3,31 +3,17 @@ import chalk from "chalk";
 import fg from "fast-glob";
 import { createReadStream } from "fs";
 import _ from "lodash";
+import mime from "mime-types";
 import { join } from "path";
 import { performance } from "perf_hooks";
+import { getS3Client } from ".";
 import { fileMd5 } from "../../utils/crypto";
-import mime from "mime-types";
-import { getConfig } from "../../utils/config";
 
 type FileRow = {
   path: string;
   md5?: string;
   isDir?: boolean;
 };
-
-const s3Promise = getConfig().then(
-  config =>
-    new AWS.S3(
-      config.profile.credentials
-        ? {
-            credentials: {
-              accessKeyId: config.profile.credentials.user_key,
-              secretAccessKey: config.profile.credentials.user_secret,
-            },
-          }
-        : { credentials: new AWS.SharedIniFileCredentials() },
-    ),
-);
 
 /**
  * @returns A list of the modified file paths.
@@ -53,7 +39,7 @@ export async function sync(
 }
 
 async function listRemoteFiles(bucket: string, targetDir: string): Promise<FileRow[]> {
-  const s3 = await s3Promise;
+  const s3 = await getS3Client();
 
   const files: FileRow[] = [];
   let response: AWS.S3.ListObjectsV2Output | null = null;
@@ -103,7 +89,7 @@ async function listLocalFiles(sourceDir: string): Promise<FileRow[]> {
 }
 
 async function deleteFiles(bucket: string, targetDir: string, files: FileRow[]): Promise<void> {
-  const s3 = await s3Promise;
+  const s3 = await getS3Client();
 
   for (const f of files) {
     const startTime = performance.now();
@@ -128,7 +114,7 @@ async function uploadFiles(
   files: FileRow[],
   meta: Record<string, string>,
 ): Promise<void> {
-  const s3 = await s3Promise;
+  const s3 = await getS3Client();
 
   for (const f of files) {
     const startTime = performance.now();

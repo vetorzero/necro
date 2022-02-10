@@ -20,3 +20,11 @@ const configPromise = getConfig().then(config => {
 export async function getAwsConfig() {
   return configPromise;
 }
+
+export async function getS3Client() {
+  return new AWS.S3(await getAwsConfig());
+}
+
+export async function getCloudFrontClient() {
+  return new AWS.CloudFront(await getAwsConfig());
+}

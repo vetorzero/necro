@@ -1,29 +1,11 @@
-import AWS from "aws-sdk";
 import { performance } from "perf_hooks";
-import { getConfig } from "../../utils/config";
-
-AWS.config.credentials = new AWS.SharedIniFileCredentials();
-AWS.config.region = "sa-east-1";
-
-const cfPromise = getConfig().then(
-  config =>
-    new AWS.CloudFront(
-      config.profile.credentials
-        ? {
-            credentials: {
-              accessKeyId: config.profile.credentials.user_key,
-              secretAccessKey: config.profile.credentials.user_secret,
-            },
-          }
-        : { credentials: new AWS.SharedIniFileCredentials() },
-    ),
-);
+import { getCloudFrontClient } from ".";
 
 /**
  * @todo invalidate only deleted files
  */
 export async function createDistributionInvalidation(distributionId: string, prefix: string) {
-  const cf = await cfPromise;
+  const cf = await getCloudFrontClient();
 
   const startTime = performance.now();
   process.stdout.write(`☁️  Invalidating Cloudfront cache... `);
@@ -57,7 +39,7 @@ export async function createDistributionInvalidation(distributionId: string, pre
 }
 
 export async function getDomainName(distributionId: string) {
-  const cf = await cfPromise;
+  const cf = await getCloudFrontClient();
   const res = await cf.getDistribution({ Id: distributionId }).promise();
 
   return res.Distribution?.DistributionConfig.Aliases?.Items?.[0] || res.Distribution?.DomainName;
