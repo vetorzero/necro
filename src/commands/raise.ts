@@ -28,8 +28,7 @@ export default function raise() {
 }
 
 async function action(command: Command) {
-  let config;
-  config = await getConfig();
+  const config = await getConfig();
 
   const version = encodeURIComponent(command.opts().version || createVersion());
   const baseDir = getProjectBaseDirectory()!;
