@@ -1,9 +1,7 @@
 import AWS from "aws-sdk";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename } from "path";
-
-const s3Options: AWS.S3.ClientConfiguration = {};
-const s3 = new AWS.S3(s3Options);
+import { getS3Client } from "../lib/aws";
 
 export type Deployment = {
   prefix: string;
@@ -26,10 +24,8 @@ async function getDeploymentInformation(
   };
 }
 
-async function getDeploymentLastModified(
-  bucket: string,
-  prefix: string,
-): Promise<Date> {
+async function getDeploymentLastModified(bucket: string, prefix: string): Promise<Date> {
+  const s3 = await getS3Client();
   const result = await s3
     .getObject({
       Bucket: bucket,
@@ -49,6 +45,7 @@ export async function listDeployments(
   client: string,
   project: string,
 ): Promise<Deployment[]> {
+  const s3 = await getS3Client();
   const result = await s3
     .listObjects({
       Bucket: bucket,
@@ -60,17 +57,13 @@ export async function listDeployments(
 
   const paths = result.CommonPrefixes;
   if (!paths) {
-    throw new Error(
-      `Could't find deployments for client ${client}, project ${project}`,
-    );
+    throw new Error(`Could't find deployments for client ${client}, project ${project}`);
   }
 
   const filter = reject<Deployment>(isNull);
   const sort = sortBy<Deployment>(prop("lastModified"));
 
-  const deployments = await Promise.all(
-    paths.map((path) => getDeploymentInformation(bucket, path)),
-  );
+  const deployments = await Promise.all(paths.map(path => getDeploymentInformation(bucket, path)));
 
   return sort(filter(deployments));
 }
