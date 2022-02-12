@@ -24,8 +24,6 @@ assert(
 );
 ajv.addSchema(schema);
 
-const configPromise = loadConfig();
-
 /**
  * Get the merged configs from the global (~/.necrorc.yaml) and the
  * project (ROOT/necro.yaml) config files.
@@ -36,8 +34,12 @@ const configPromise = loadConfig();
  *  - global config with default profile
  */
 export async function getConfig(): Promise<Config.MergedConfig> {
+  if (!configPromise) {
+    configPromise = loadConfig();
+  }
   return configPromise;
 }
+let configPromise: Promise<Config.MergedConfig>;
 
 export async function loadConfig(): Promise<Config.MergedConfig> {
   // find the project's root dir

@@ -4,11 +4,7 @@ import inquirer, { QuestionCollection } from "inquirer";
 import { kebabCase } from "lodash/fp";
 import { join } from "path";
 import { PROJECT_CONFIG_FILE } from "../utils/config";
-import {
-  directoryExists,
-  guessClientName,
-  guessProjectName,
-} from "../utils/file";
+import { directoryExists, guessClientName, guessProjectName } from "../utils/file";
 import log from "../utils/log";
 
 const questions: QuestionCollection = [
@@ -49,7 +45,7 @@ const questions: QuestionCollection = [
   {
     name: "distFolder",
     message: "Where are the files to be published?",
-    validate: (path) => {
+    validate: path => {
       if (!directoryExists(path)) {
         return `The folder ${path} doesn't exist.`;
       }
@@ -88,11 +84,9 @@ export default function init() {
 async function action(command: Command) {
   const options = command.opts();
   const { overwrite, ...answers } = await inquirer.prompt(questions, options);
-
   if (!fileExists() || overwrite) {
     const json = JSON.stringify(answers, null, 2);
     writeFileSync(filePath, json);
-    log.success(`Config file written:
-${filePath}`);
+    log.success(`Config file written:\n${filePath}`);
   }
 }
