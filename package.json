@@ -19,6 +19,8 @@
   "author": "Luiz \"Felds\" Liscia",
   "license": "UNLICENSED",
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.50.0",
+    "@aws-sdk/client-s3": "^3.50.0",
     "ajv": "^7.0.2",
     "aws-sdk": "^2.1072.0",
     "chalk": "^4.1.0",
