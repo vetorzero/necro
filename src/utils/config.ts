@@ -86,7 +86,7 @@ export async function loadConfig(): Promise<Config.MergedConfig> {
   return config as Config.MergedConfig;
 }
 
-async function loadYaml<T>(path: PathLike, schema: string): Promise<T | null> {
+export async function loadYaml<T>(path: PathLike, schema: string): Promise<T | null> {
   const contents = await readFile(path, "utf-8").catch(err => {
     switch (err?.code) {
       case "ENOENT":
