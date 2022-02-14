@@ -1,7 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
-    "AWSCredentials": {
+    "GlobalConfig": {
+      "properties": {
+        "default_profile": {
+          "type": "string"
+        },
+        "profiles": {
+          "items": {
+            "$ref": "#/definitions/GlobalConfig.Profile"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "default_profile",
+        "profiles"
+      ],
+      "type": "object"
+    },
+    "GlobalConfig.AWSCredentials": {
       "properties": {
         "user_key": {
           "type": "string"
@@ -16,7 +34,7 @@
       ],
       "type": "object"
     },
-    "AWSHosting": {
+    "GlobalConfig.AWSHosting": {
       "properties": {
         "cloudfront_distribution_id": {
           "type": "string"
@@ -31,7 +49,53 @@
       ],
       "type": "object"
     },
-    "Config.Auth": {
+    "GlobalConfig.Profile": {
+      "properties": {
+        "credentials": {
+          "$ref": "#/definitions/GlobalConfig.AWSCredentials",
+          "description": "The identification of a AWS user. Leave it empty to use the current credentials configured via the AWS CLI."
+        },
+        "hosting": {
+          "$ref": "#/definitions/GlobalConfig.AWSHosting",
+          "description": "The AWS resources used to serve this demo."
+        },
+        "name": {
+          "description": "And identifier for the profile.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "hosting"
+      ],
+      "type": "object"
+    },
+    "ProjectConfig": {
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/ProjectConfig.Auth"
+        },
+        "client": {
+          "type": "string"
+        },
+        "dist_folder": {
+          "type": "string"
+        },
+        "project": {
+          "type": "string"
+        },
+        "use_profile": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "client",
+        "project",
+        "dist_folder"
+      ],
+      "type": "object"
+    },
+    "ProjectConfig.Auth": {
       "properties": {
         "password": {
           "description": "A password for client authentication",
@@ -45,92 +109,6 @@
       "required": [
         "username",
         "password"
-      ],
-      "type": "object"
-    },
-    "Config.MergedConfig": {
-      "properties": {
-        "auth": {
-          "$ref": "#/definitions/Config.Auth"
-        },
-        "client": {
-          "type": "string"
-        },
-        "dist_folder": {
-          "type": "string"
-        },
-        "profile": {
-          "$ref": "#/definitions/Config.Profile"
-        },
-        "project": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "client",
-        "dist_folder",
-        "profile",
-        "project"
-      ],
-      "type": "object"
-    },
-    "Config.Profile": {
-      "properties": {
-        "credentials": {
-          "$ref": "#/definitions/AWSCredentials",
-          "description": "The identification of a AWS user. Leave it empty to use the current credentials configured via the AWS CLI."
-        },
-        "hosting": {
-          "$ref": "#/definitions/AWSHosting",
-          "description": "The AWS resources used to serve this demo."
-        },
-        "name": {
-          "description": "And identifier for the profile when using the global config.",
-          "type": "string"
-        }
-      },
-      "required": [
-        "hosting"
-      ],
-      "type": "object"
-    },
-    "GlobalConfig": {
-      "description": "Global configurations that should be defined on `~/.necrorc.yaml`.",
-      "properties": {
-        "default_profile": {
-          "type": "string"
-        },
-        "profiles": {
-          "items": {
-            "$ref": "#/definitions/Config.Profile"
-          },
-          "type": "array"
-        }
-      },
-      "type": "object"
-    },
-    "ProjectConfig": {
-      "properties": {
-        "auth": {
-          "$ref": "#/definitions/Config.Auth"
-        },
-        "client": {
-          "type": "string"
-        },
-        "dist_folder": {
-          "type": "string"
-        },
-        "profile": {
-          "$ref": "#/definitions/Config.Profile"
-        },
-        "project": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "client",
-        "project",
-        "dist_folder"
       ],
       "type": "object"
     }
