@@ -7,6 +7,7 @@ import { GLOBAL_CONFIG_FILE } from "../../utils/config";
 import { header } from "../../utils/log";
 import schema from "../../@schema/config.schema.json";
 import assert from "assert";
+import { singlePrompt } from "../../utils/cli";
 
 enum CredentialChoices {
   SHARED,
@@ -176,13 +177,4 @@ async function askSetDefault<T extends GlobalConfig["default_profile"]>(
     default: defaultValue,
     message: `Set profile "${profileName}" as default?`,
   });
-}
-
-async function singlePrompt(question: DistinctQuestion) {
-  const { answer } = await inquirer.prompt({
-    ...question,
-    name: "answer",
-  });
-
-  return answer;
 }

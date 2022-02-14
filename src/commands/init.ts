@@ -1,17 +1,25 @@
 import { Command } from "commander";
 import { existsSync, writeFileSync } from "fs";
-import inquirer, { QuestionCollection } from "inquirer";
-import { kebabCase } from "lodash/fp";
+import inquirer, { Answers, QuestionCollection } from "inquirer";
+import { kebabCase, omitBy } from "lodash/fp";
 import { join } from "path";
+import YAML from "yaml";
+import { singlePrompt } from "../utils/cli";
 import { PROJECT_CONFIG_FILE } from "../utils/config";
 import { directoryExists, guessClientName, guessProjectName } from "../utils/file";
-import log from "../utils/log";
+import { success, warn } from "../utils/log";
+import { notEmpty } from "../utils/validators";
+
+const FILE_PATH = join(process.cwd(), PROJECT_CONFIG_FILE);
+const FILE_EXISTS = existsSync(FILE_PATH);
+
+export default function init() {
+  return new Command("init")
+    .description("Creates a necro config file in the current dir.")
+    .action(action);
+}
 
 const questions: QuestionCollection = [
-  {
-    name: "bucket",
-    message: "What is the bucket that will host these files?",
-  },
   {
     name: "client",
     message: "What is the name of the client for this project?",
@@ -25,68 +33,53 @@ const questions: QuestionCollection = [
     default: kebabCase(guessProjectName()),
   },
   {
-    name: "public",
-    message: "Should this project be made public?",
-    type: "confirm",
-    default: false,
-  },
-  {
-    name: "username",
-    message: "What is the default username for this demo?",
-    when: (prev: any) => !prev.public,
-    default: (prev: any) => prev.project,
-  },
-  {
-    name: "password",
-    message: "What is the default password for this demo?",
-    when: (prev: any) => !prev.public,
-    filter: (password: string) => (password.length ? password : null),
-  },
-  {
-    name: "distFolder",
+    name: "dist_folder",
     message: "Where are the files to be published?",
     validate: path => {
       if (!directoryExists(path)) {
         return `The folder ${path} doesn't exist.`;
       }
-
       return true;
     },
   },
   {
-    name: "overwrite",
-    message: "The necro file already exists. Overwrite?",
+    name: "_auth",
+    message: "Should this demo be password protected?",
     type: "confirm",
-    when: (prev: any) => fileExists() && !prev.overwrite,
-    default: (prev: any) => !!prev.overwrite,
+  },
+  {
+    name: "auth.username",
+    message: "What is the username for this demo?",
+    when: prev => prev._auth,
+    validate: notEmpty("username"),
+    default: (prev: Answers) => prev.client ?? "",
+  },
+  {
+    name: "auth.password",
+    message: "What is the password for this demo?",
+    when: prev => prev._auth,
+    validate: notEmpty("password"),
   },
 ];
 
-const filePath = join(process.cwd(), PROJECT_CONFIG_FILE);
-
-function fileExists(): boolean {
-  return existsSync(filePath);
-}
-
-export default function init() {
-  return new Command("init")
-    .description("Creates a necro config file in the current dir.")
-    .option("--client [name]", "the client's name")
-    .option("--project [codename]", "the project's codename")
-    .option("--public", "disable authentication")
-    .option("--username [username]", "a default username for the demo")
-    .option("--password [password]", "a default password for the demo")
-    .option("--dist-folder [path]", "the folder containing the built project")
-    .option("--overwrite", "replace the file if it already exists")
-    .action(action);
-}
-
 async function action(command: Command) {
-  const options = command.opts();
-  const { overwrite, ...answers } = await inquirer.prompt(questions, options);
-  if (!fileExists() || overwrite) {
-    const json = JSON.stringify(answers, null, 2);
-    writeFileSync(filePath, json);
-    log.success(`Config file written:\n${filePath}`);
+  const overwrite = FILE_EXISTS
+    ? await singlePrompt({
+        message: "Necro file already exists. Overwrite?",
+        type: "confirm",
+        when: FILE_EXISTS,
+      })
+    : true;
+  if (FILE_EXISTS && !overwrite) {
+    warn("Aborted.");
+    return;
   }
+
+  const allAwnswers = await inquirer.prompt(questions);
+  const answers = omitBy((_: any, k: string) => k.startsWith("_"))(allAwnswers);
+  console.log({ overwrite, answers });
+
+  const yaml = YAML.stringify(answers);
+  writeFileSync(FILE_PATH, yaml);
+  success(`Config file written:\n${FILE_PATH}`);
 }
