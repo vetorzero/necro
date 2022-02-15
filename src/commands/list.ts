@@ -1,8 +1,15 @@
-import assert from "assert";
+/**
+ *
+ *
+ *            TO REFACTOR
+ *
+ *
+ */
+
 import chalk from "chalk";
 import { Command } from "commander";
-import { getConfig, ValidationError } from "../utils/config";
-import { error, debug } from "../utils/log";
+import { getConfig } from "../utils/config";
+import { debug } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
 export default function list() {
