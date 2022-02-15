@@ -6,7 +6,7 @@ import { getGlobalConfig } from "../../lib/config/global";
 import { singlePrompt } from "../../utils/cli";
 import { GLOBAL_CONFIG_FILE } from "../../utils/config";
 import { info } from "../../utils/log";
-import { BANNER, multilinePad } from "../../utils/text";
+import { banner, multilinePad } from "../../utils/text";
 import YAML from "yaml";
 
 enum CredentialChoices {
@@ -21,7 +21,7 @@ export default function () {
 }
 
 async function action() {
-  info(`\n${multilinePad(BANNER)}\n`);
+  info(banner);
 
   const config: GlobalConfig = await getGlobalConfig().catch(_ => ({
     default_profile: "",
@@ -31,9 +31,10 @@ async function action() {
 
   if (isNew) {
     info(
-      `\nLet's create your global config file.` +
-        `\nIt'll be located at ${GLOBAL_CONFIG_FILE}` +
-        `\n  and it will contain all the necessary information to raise a demo to the clouds.\n`,
+      `Let's create your global config file.` +
+        `\n` +
+        `\nIt'll be located at ${GLOBAL_CONFIG_FILE} and` +
+        `\nit will contain all the necessary information to raise a demo to the clouds.\n`,
     );
   }
 
