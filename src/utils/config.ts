@@ -10,6 +10,7 @@ import YAML from "yaml";
 import schema from "../@schema/config.schema.json";
 import { getProjectBaseDirectory } from "./file";
 import { info } from "./log";
+import { ValidationError } from "../lib/error/ValidationError";
 
 export const PROJECT_CONFIG_FILE = "necro.yaml";
 export const GLOBAL_CONFIG_FILE = join(homedir(), ".necrorc.yaml");
@@ -33,58 +34,58 @@ ajv.addSchema(schema);
  *  - project config
  *  - global config with default profile
  */
-export async function getConfig(): Promise<Config.MergedConfig> {
-  if (!configPromise) {
-    configPromise = loadConfig();
-  }
-  return configPromise;
-}
-let configPromise: Promise<Config.MergedConfig>;
+// export async function getConfig(): Promise<Config.MergedConfig> {
+//   if (!configPromise) {
+//     configPromise = loadConfig();
+//   }
+//   return configPromise;
+// }
+// let configPromise: Promise<Config.MergedConfig>;
 
-export async function loadConfig(): Promise<Config.MergedConfig> {
-  // find the project's root dir
-  const baseDir = getProjectBaseDirectory();
-  assert(baseDir, `Couldn't find a necro config file.`);
+// export async function loadConfig(): Promise<Config.MergedConfig> {
+//   // find the project's root dir
+//   const baseDir = getProjectBaseDirectory();
+//   assert(baseDir, `Couldn't find a necro config file.`);
 
-  // load project config
-  const projectConfig = (await loadYaml<ProjectConfig>(
-    join(baseDir, PROJECT_CONFIG_FILE),
-    "#/definitions/ProjectConfig",
-  )) as ProjectConfig;
+//   // load project config
+//   const projectConfig = (await loadYaml<ProjectConfig>(
+//     join(baseDir, PROJECT_CONFIG_FILE),
+//     "#/definitions/ProjectConfig",
+//   )) as ProjectConfig;
 
-  // load global config
-  const globalConfig = await loadYaml<GlobalConfig>(
-    GLOBAL_CONFIG_FILE,
-    "#/definitions/GlobalConfig",
-  );
+//   // load global config
+//   const globalConfig = await loadYaml<GlobalConfig>(
+//     GLOBAL_CONFIG_FILE,
+//     "#/definitions/GlobalConfig",
+//   );
 
-  // select profile
-  const profileName = program.opts()?.profile ?? globalConfig?.default_profile;
-  const profile = globalConfig?.profiles?.find(p => p.name === profileName);
-  if (profileName) {
-    assert(profile, `Profile "${profileName}" doesn't exist.`);
-  }
+//   // select profile
+//   const profileName = program.opts()?.profile ?? globalConfig?.default_profile;
+//   const profile = globalConfig?.profiles?.find(p => p.name === profileName);
+//   if (profileName) {
+//     assert(profile, `Profile "${profileName}" doesn't exist.`);
+//   }
 
-  // merge configs
-  const config = { ...projectConfig };
-  if (program.opts()?.profile && profile) {
-    info(`👷 Using profile ${chalk.bold(profileName)} from CLI.`);
-    config.profile = profile;
-  } else if (projectConfig.profile) {
-    info(`👷 Using profile from project.`);
-  } else if (profile !== undefined) {
-    info(`👷 Using profile ${chalk.bold(profileName)} from global config file.`);
-    config.profile = profile;
-  } else {
-    throw new Error(
-      `Can't find a profile for publishing.` +
-        `\nRun "necro global config" to create a global profile` +
-        `\nor add a "profile" property to the project configuration.`,
-    );
-  }
+//   // merge configs
+//   const config = { ...projectConfig };
+//   if (program.opts()?.profile && profile) {
+//     info(`👷 Using profile ${chalk.bold(profileName)} from CLI.`);
+//     config.profile = profile;
+//   } else if (projectConfig.profile) {
+//     info(`👷 Using profile from project.`);
+//   } else if (profile !== undefined) {
+//     info(`👷 Using profile ${chalk.bold(profileName)} from global config file.`);
+//     config.profile = profile;
+//   } else {
+//     throw new Error(
+//       `Can't find a profile for publishing.` +
+//         `\nRun "necro global config" to create a global profile` +
+//         `\nor add a "profile" property to the project configuration.`,
+//     );
+//   }
 
-  return config as Config.MergedConfig;
-}
+//   return config as Config.MergedConfig;
+// }
 
 export async function loadYaml<T>(path: PathLike, schema: string): Promise<T | null> {
   const contents = await readFile(path, "utf-8").catch(err => {
@@ -120,12 +121,5 @@ function validateConfig<T>(validate: ValidateFunction, data: any): asserts data 
         dataVar: "config",
       }),
     );
-  }
-}
-
-export class ValidationError extends Error {
-  constructor(public errorsText: string) {
-    super();
-    this.message = errorsText;
   }
 }

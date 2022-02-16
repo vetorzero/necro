@@ -17,6 +17,9 @@ export function debug(arg0: any, ...args: any[]) {
 export function error(arg0: any, ...args: any[]) {
   console.error(chalk.red(format(arg0, ...args)));
 }
+export function dir(x: any) {
+  console.dir(x, { depth: null });
+}
 
 const log = {
   success,
