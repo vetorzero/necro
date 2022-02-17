@@ -1,6 +1,5 @@
 import Ajv, { ValidateFunction } from "ajv";
 import assert from "assert";
-import chalk from "chalk";
 import { program } from "commander";
 import { PathLike } from "fs";
 import { readFile } from "fs/promises";
@@ -8,8 +7,8 @@ import { homedir } from "os";
 import { join } from "path";
 import YAML from "yaml";
 import schema from "../@schema/config.schema.json";
-import { getProjectBaseDirectory } from "./file";
-import { info } from "./log";
+import { getGlobalConfig } from "../lib/config/global";
+import { getProjectConfig } from "../lib/config/project";
 import { ValidationError } from "../lib/error/ValidationError";
 
 export const PROJECT_CONFIG_FILE = "necro.yaml";
@@ -122,4 +121,18 @@ function validateConfig<T>(validate: ValidateFunction, data: any): asserts data 
       }),
     );
   }
+}
+
+export async function getProfile(): Promise<GlobalConfig.Profile> {
+  const projectConfig = await getProjectConfig().catch(_ => null);
+  const globalConfig = await getGlobalConfig().catch(_ => null);
+
+  const profileName =
+    program.opts().profile ?? projectConfig?.use_profile ?? globalConfig?.default_profile;
+  assert(profileName, `default_profile not configured in ${GLOBAL_CONFIG_FILE}`);
+
+  const profile = globalConfig?.profiles.find(p => profileName === p.name);
+  assert(profile, `profile ${profileName} does not exist.`);
+
+  return profile;
 }
