@@ -8,7 +8,7 @@
 
 import chalk from "chalk";
 import { Command } from "commander";
-import { getConfig } from "../utils/config";
+import { getConfig } from "../lib/config/merged";
 import { dir, success, warn } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
@@ -22,11 +22,6 @@ export default function list() {
 
 async function action(command: Command) {
   const config = await getConfig();
-
-  // const config = await getMergedConfig();
-
-  dir(config);
-  return;
 
   const deployments = await listDeployments(
     config.profile.hosting.s3_bucket,

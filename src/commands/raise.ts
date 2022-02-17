@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { join } from "path";
 import { createDistributionInvalidation, getDomainName } from "../lib/aws/cloudfront";
 import { sync } from "../lib/aws/sync";
-import { getConfig } from "../utils/config";
+import { getConfig } from "../lib/config/merged";
 import {
   assertFileExists,
   assertIsDir,
@@ -19,7 +19,6 @@ import {
   getProjectBaseDirectory,
 } from "../utils/file";
 import { error, info } from "../utils/log";
-
 /**
  * @todo set passwords only on html files
  */
@@ -36,7 +35,7 @@ export default function raise() {
 }
 
 async function action(command: Command) {
-  const config = await getConfig();
+  let config = await getConfig();
 
   const version = encodeURIComponent(command.opts().version || createVersion());
   const baseDir = getProjectBaseDirectory()!;

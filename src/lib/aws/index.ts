@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { getConfig } from "../../utils/config";
+import { getConfig } from "../config/merged";
 
 export async function getAwsConfig() {
   if (!configPromise) {

@@ -8,7 +8,7 @@
 
 import chalk from "chalk";
 import { Command } from "commander";
-import { getConfig } from "../utils/config";
+import { getConfig } from "../lib/config/merged";
 import { debug } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
