@@ -10,13 +10,13 @@ type MergedConfig = ProjectConfig & {
 };
 
 export async function getConfig(): Promise<MergedConfig> {
-  const globalConfig: GlobalConfig = await getGlobalConfig();
+  const globalConfig = await getGlobalConfig();
   const projectConfig = await getProjectConfig();
 
-  const optsProfile = program.opts()?.profile;
-  const projectProfile = projectConfig?.use_profile;
-  const globalProfile = globalConfig?.default_profile;
-  const profileName = optsProfile ?? projectProfile ?? globalProfile;
+  const optsProfileName = program.opts()?.profile;
+  const projectProfileName = projectConfig?.use_profile;
+  const globalProfileName = globalConfig?.default_profile;
+  const profileName = optsProfileName ?? projectProfileName ?? globalProfileName;
 
   const profile = globalConfig.profiles.find(p => p.name === profileName);
 
@@ -24,9 +24,9 @@ export async function getConfig(): Promise<MergedConfig> {
     assert(profile, `Profile "${profileName}" doesn't exist.`);
   }
 
-  if (optsProfile && profile) {
+  if (optsProfileName && profile) {
     info(`👷 Using profile ${chalk.bold(profileName)} from CLI.`);
-  } else if (projectConfig.use_profile && profile) {
+  } else if (projectProfileName && profile) {
     info(`👷 Using profile from project.`);
   } else if (profile !== undefined) {
     info(`👷 Using profile ${chalk.bold(profileName)} from global config file.`);
@@ -38,5 +38,5 @@ export async function getConfig(): Promise<MergedConfig> {
     );
   }
 
-  return { ...projectConfig, profile } as MergedConfig;
+  return { ...projectConfig, profile };
 }
