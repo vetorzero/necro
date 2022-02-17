@@ -10,15 +10,19 @@ type MergedConfig = ProjectConfig & {
 };
 
 export async function getConfig(): Promise<MergedConfig> {
-  const globalConfig = await getGlobalConfig();
-  const projectConfig = await getProjectConfig();
+  const globalConfig = await getGlobalConfig().catch(_ => null);
+  const projectConfig = await getProjectConfig().catch(_ => null);
+
+  assert(globalConfig, "Global config does not exist.");
+  assert(projectConfig, "Project config does not exist.");
 
   const optsProfileName = program.opts()?.profile;
   const projectProfileName = projectConfig?.use_profile;
   const globalProfileName = globalConfig?.default_profile;
+
   const profileName = optsProfileName ?? projectProfileName ?? globalProfileName;
 
-  const profile = globalConfig.profiles.find(p => p.name === profileName);
+  const profile = globalConfig?.profiles.find(p => p.name === profileName);
 
   if (profileName) {
     assert(profile, `Profile "${profileName}" doesn't exist.`);
