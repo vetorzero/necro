@@ -47,6 +47,10 @@ type ProjectConfig = {
   use_profile?: string;
 };
 
+type MergedConfig = ProjectConfig & {
+  profile: GlobalConfig.Profile;
+};
+
 declare namespace ProjectConfig {
   type Auth = {
     /**
