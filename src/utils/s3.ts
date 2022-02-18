@@ -1,5 +1,5 @@
 import AWS from "aws-sdk";
-import { assert, info } from "console";
+import { assert, debug, info } from "console";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename } from "path";
 import { getS3Client } from "../lib/aws";
@@ -97,5 +97,6 @@ export async function emptyS3Directory(bucket: string, dir: string) {
     await emptyS3Directory(bucket, dir);
   }
 
-  info(`deleted ${listedObjects.Contents?.length} objects from ${dir}`);
+  info(`❌ deleted ${listedObjects.Contents?.length} objects from ${dir}`);
+  debug(`🗑  ${objectsToDelete.map(obj => obj.Key).join("\n🗑  ")}`);
 }
