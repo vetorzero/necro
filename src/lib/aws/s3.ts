@@ -1,9 +1,15 @@
-import assert from "assert";
-import _ from "lodash";
 import { getS3Client } from ".";
-import { dir } from "../../utils/log";
+import { isString } from "../../utils/guards";
 
-export async function listClients(bucket: string): Promise<string[]> {
+type Client = {
+  name: string;
+  projects: Project[];
+};
+type Project = {
+  name: string;
+};
+
+async function listClients(bucket: string): Promise<string[]> {
   const s3 = await getS3Client();
   const res = await s3
     .listObjectsV2({
@@ -15,14 +21,36 @@ export async function listClients(bucket: string): Promise<string[]> {
   return (
     res.CommonPrefixes?.map(p => p.Prefix)
       .filter(isString)
-      .map(x => x.slice(-1)) ?? []
+      .map(x => x.slice(0, -1)) ?? [] // remove last slash
   );
 }
 
-/**
- * function required for type narrowing
- * @see https://github.com/microsoft/TypeScript/issues/20812
- */
-function isString(x: any): x is string {
-  return typeof x === "string";
+async function listProjectsByClient(bucket: string, client: string): Promise<string[]> {
+  const s3 = await getS3Client();
+
+  const prefix = `${client}/`;
+
+  const res = await s3
+    .listObjectsV2({
+      Bucket: bucket,
+      Delimiter: "/",
+      Prefix: prefix,
+    })
+    .promise();
+
+  return (
+    res.CommonPrefixes?.map(p => p.Prefix)
+      .filter(isString)
+      .map(x => x.slice(prefix.length, -1)) ?? [] // remove prefix + last slash
+  );
+}
+
+export async function listProjects(bucket: string): Promise<Client[]> {
+  const clients = await listClients(bucket);
+  return Promise.all(
+    clients.map(async c => ({
+      name: c,
+      projects: (await listProjectsByClient(bucket, c)).map(p => ({ name: p })),
+    })),
+  );
 }

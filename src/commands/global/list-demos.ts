@@ -1,12 +1,13 @@
-import commander, { program } from "commander";
-import { listClients } from "../../lib/aws/s3";
-import { getGlobalConfig } from "../../lib/config/global";
+import chalk from "chalk";
+import commander from "commander";
+import { listProjects } from "../../lib/aws/s3";
 import { getProfile } from "../../utils/config";
-import { dir } from "../../utils/log";
+import { dir, info } from "../../utils/log";
 
 export default function () {
   const cmd = commander
     .command("list-demos")
+    .aliases(["ld"])
     .description("List all the demos for the current profile.")
     .action(action);
   return cmd;
@@ -14,7 +15,14 @@ export default function () {
 
 async function action(cmd: commander.Command) {
   const profile = await getProfile();
-  const clients = await listClients(profile.hosting.s3_bucket);
+  info(`\nListing projects for the profile "${chalk.bold(profile.name)}"...`);
 
-  dir(clients);
+  const clients = await listProjects(profile.hosting.s3_bucket);
+  for (const client of clients) {
+    info(`\nclient: ${chalk.bold(client.name)}`);
+    info(`projects:`);
+    for (const project of client.projects) {
+      info(`  /${client.name}/${chalk.bold(project.name)}`);
+    }
+  }
 }
