@@ -1,4 +1,5 @@
 import AWS from "aws-sdk";
+import { assert, info } from "console";
 import { isNull, prop, reject, sortBy } from "lodash/fp";
 import { basename } from "path";
 import { getS3Client } from "../lib/aws";
@@ -66,4 +67,35 @@ export async function listDeployments(
   const deployments = await Promise.all(paths.map(path => getDeploymentInformation(bucket, path)));
 
   return sort(filter(deployments));
+}
+
+export async function emptyS3Directory(bucket: string, dir: string) {
+  const s3 = await getS3Client();
+
+  const listParams: AWS.S3.ListObjectsV2Request = {
+    Bucket: bucket,
+    Prefix: dir,
+  };
+
+  const listedObjects = await s3.listObjectsV2(listParams).promise();
+  assert(listedObjects.Contents, "No objects found");
+
+  if (listedObjects.Contents == undefined) return;
+
+  const objectsToDelete: AWS.S3.ObjectIdentifierList = listedObjects.Contents.map(obj => ({
+    Key: obj.Key!,
+  }));
+
+  const deleteParams: AWS.S3.DeleteObjectsRequest = {
+    Bucket: bucket,
+    Delete: { Objects: objectsToDelete },
+  };
+
+  await s3.deleteObjects(deleteParams).promise();
+
+  if (listedObjects.IsTruncated) {
+    await emptyS3Directory(bucket, dir);
+  }
+
+  info(`deleted ${listedObjects.Contents?.length} objects from ${dir}`);
 }
