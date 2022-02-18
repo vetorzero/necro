@@ -2,7 +2,7 @@ import chalk from "chalk";
 import commander from "commander";
 import { listProjects } from "../../lib/aws/s3";
 import { getProfile } from "../../utils/config";
-import { dir, info } from "../../utils/log";
+import { info } from "../../utils/log";
 
 export default function () {
   const cmd = commander
@@ -15,7 +15,7 @@ export default function () {
 
 async function action(cmd: commander.Command) {
   const profile = await getProfile();
-  info(`\nListing projects for the profile "${chalk.bold(profile.name)}"...`);
+  info(`\nListing demos for the profile "${chalk.bold(profile.name)}"...`);
 
   const clients = await listProjects(profile.hosting.s3_bucket);
   for (const client of clients) {
