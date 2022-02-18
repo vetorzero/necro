@@ -98,5 +98,5 @@ export async function emptyS3Directory(bucket: string, dir: string) {
   }
 
   info(`❌ deleted ${listedObjects.Contents?.length} objects from ${dir}`);
-  debug(`🗑  ${objectsToDelete.map(obj => obj.Key).join("\n🗑  ")}`);
+  debug(`🗑️ ${objectsToDelete.map(obj => obj.Key).join("\n🗑️ ")}`);
 }
