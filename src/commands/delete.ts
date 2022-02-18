@@ -20,6 +20,9 @@ async function action(command: Command) {
   );
 
   debug(`Found ${deployments.length} deployment(s).`);
+  if (deployments.length === 0) {
+    return;
+  }
 
   const answer: string[] = await singlePrompt({
     message: "Select deployments to delete",
