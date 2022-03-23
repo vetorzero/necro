@@ -37,7 +37,7 @@ export default function raise() {
 async function action(command: Command) {
   let config = await getConfig();
 
-  const version = encodeURIComponent(command.opts().version || createVersion());
+  const version = encodeURIComponent(command.opts().version ?? config.version ?? createVersion());
   const baseDir = getProjectBaseDirectory()!;
   const sourceDir = join(baseDir, config.dist_folder);
   const targetDir = `${config.client}/${config.project}/${version}`;
