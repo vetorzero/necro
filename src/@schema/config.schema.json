@@ -70,6 +70,38 @@
       ],
       "type": "object"
     },
+    "MergedConfig": {
+      "properties": {
+        "auth": {
+          "$ref": "#/definitions/ProjectConfig.Auth"
+        },
+        "client": {
+          "type": "string"
+        },
+        "dist_folder": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/definitions/GlobalConfig.Profile"
+        },
+        "project": {
+          "type": "string"
+        },
+        "use_profile": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "client",
+        "dist_folder",
+        "profile",
+        "project"
+      ],
+      "type": "object"
+    },
     "ProjectConfig": {
       "properties": {
         "auth": {
@@ -85,6 +117,9 @@
           "type": "string"
         },
         "use_profile": {
+          "type": "string"
+        },
+        "version": {
           "type": "string"
         }
       },

@@ -45,6 +45,7 @@ type ProjectConfig = {
   dist_folder: string;
   auth?: ProjectConfig.Auth;
   use_profile?: string;
+  version?: string;
 };
 
 type MergedConfig = ProjectConfig & {
