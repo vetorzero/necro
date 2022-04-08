@@ -8,8 +8,9 @@
 
 import chalk from "chalk";
 import { Command } from "commander";
+import { getDomainName } from "../lib/aws/cloudfront";
 import { getConfig } from "../lib/config/merged";
-import { dir, success, warn } from "../utils/log";
+import { dir, info, success, warn } from "../utils/log";
 import { listDeployments } from "../utils/s3";
 
 export default function list() {
@@ -22,6 +23,7 @@ export default function list() {
 
 async function action(command: Command) {
   const config = await getConfig();
+  const cfDistributionId = config.profile.hosting.cloudfront_distribution_id;
 
   const deployments = await listDeployments(
     config.profile.hosting.s3_bucket,
@@ -36,7 +38,8 @@ async function action(command: Command) {
     : deployments[deployments.length - 1];
 
   if (deployment) {
-    success(`https://demo.vzlab.com.br/${deployment.prefix}`);
+    const domainName = await getDomainName(cfDistributionId);
+    info(`🔗 https://${domainName}/${deployment.prefix}/`);
   } else {
     const cmd = chalk.bold("necro list");
     warn(`Deployment not found.\nUse ${cmd} to get the available deployments.`);

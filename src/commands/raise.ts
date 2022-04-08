@@ -93,7 +93,7 @@ async function action(command: Command) {
   }
 
   const domainName = await getDomainName(cfDistributionId);
-  info(`🔗 http://${domainName}/${targetDir}`);
+  info(`🔗 https://${domainName}/${targetDir}/`);
 }
 
 /**
