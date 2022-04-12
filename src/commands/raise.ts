@@ -7,7 +7,6 @@
  */
 
 import { Command } from "commander";
-import { format } from "date-fns";
 import { join } from "path";
 import { createDistributionInvalidation, getDomainName } from "../lib/aws/cloudfront";
 import { sync } from "../lib/aws/sync";
@@ -19,6 +18,7 @@ import {
   getProjectBaseDirectory,
 } from "../utils/file";
 import { error, info } from "../utils/log";
+import { createVersion } from "../utils/text";
 /**
  * @todo set passwords only on html files
  */
@@ -94,11 +94,4 @@ async function action(command: Command) {
 
   const domainName = await getDomainName(cfDistributionId);
   info(`🔗 https://${domainName}/${targetDir}/`);
-}
-
-/**
- * Get the current date as YYYY-MM-DD.
- */
-function createVersion(): string {
-  return format(Date.now(), "yyyy-MM-dd");
 }
