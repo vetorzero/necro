@@ -129,15 +129,19 @@ async function uploadFiles(
 
     const sourceFilePath = join(sourceDir, f.path);
     const stream = createReadStream(sourceFilePath);
-    await s3
-      .upload({
-        Bucket: bucket,
-        Key: join(targetDir, f.path),
-        Body: stream,
-        ContentType: mime.lookup(sourceFilePath) || "application/octet-stream",
-        Metadata,
-      })
-      .promise();
+    const targetPath = join(targetDir, f.path);
+
+    const upload = s3.upload({
+      Bucket: bucket,
+      Key: targetPath,
+      Body: stream,
+      ContentType: mime.lookup(sourceFilePath) || "application/octet-stream",
+      Metadata,
+    });
+
+    await upload.promise().catch(err => {
+      console.error(`Problem uploading the file ${targetPath}`, err);
+    });
 
     const duration = performance.now() - startTime;
     process.stdout.write(chalk`{green Done! (${duration.toFixed(0)}ms)}\n`);
