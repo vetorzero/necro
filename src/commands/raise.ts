@@ -93,5 +93,8 @@ async function action(command: Command) {
   }
 
   const domainName = await getDomainName(cfDistributionId);
-  info(`🔗 https://${domainName}/${targetDir}/`);
+  info(`🔗 Link: https://${domainName}/${targetDir}/`);
+  if (config.auth) {
+    info(`🔒 Credentials: ${config.auth.username} / ${config.auth.password}`);
+  }
 }
