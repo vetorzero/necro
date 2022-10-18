@@ -28,10 +28,10 @@ export function getProjectBaseDirectory(): string | null {
   const parts = currentFolder
     .split(path.sep)
     // remove empty parts
-    .filter((x) => x.length);
+    .filter(x => x.length);
 
   while (parts.length) {
-    const scanningPath = path.join("/", ...parts);
+    const scanningPath = path.join(path.sep, ...parts);
     if (existsSync(join(scanningPath, PROJECT_CONFIG_FILE))) {
       return scanningPath;
     }
@@ -95,11 +95,10 @@ export function listDir(base: string, options?: ListDirOptions): string[] {
   const found: string[] = [];
   const queue = [base];
   while (queue.length) {
-    const current =
-      mode === ListDirOptionsMode.BFS ? queue.shift()! : queue.pop()!;
+    const current = mode === ListDirOptionsMode.BFS ? queue.shift()! : queue.pop()!;
     const recurse = isDir(current);
     if (recurse) {
-      const ls = readdirSync(current).map((x) => join(current, x));
+      const ls = readdirSync(current).map(x => join(current, x));
       queue.push(...ls);
     }
     if (!recurse || includeDirs) {
